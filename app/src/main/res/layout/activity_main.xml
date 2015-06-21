@@ -1,0 +1,47 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="me.robwilliams.pack.MainActivity"
+    android:orientation="vertical">
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dip"
+        android:layout_weight="1" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lists"
+        android:id="@+id/listsButton"
+        android:onClick="openListsActivity" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dip"
+        android:layout_weight="1" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Sets of Lists"
+        android:id="@+id/setsButton"
+        android:onClick="openSetsActivity"/>
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dip"
+        android:layout_weight="1" />
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Trips"
+        android:id="@+id/tripsButton"
+        android:onClick="openTripsActivity" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dip"
+        android:layout_weight="1" />
+</LinearLayout>
