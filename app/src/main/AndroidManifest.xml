@@ -29,6 +29,11 @@
             <meta-data android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.robwilliams.pack.ListOverviewActivity" />
         </activity>
+
+        <provider
+            android:name=".data.ListsContentProvider"
+            android:authorities="me.robwilliams.pack.lists.contentprovider" >
+        </provider>
     </application>
 
 </manifest>
