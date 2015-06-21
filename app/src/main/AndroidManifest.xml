@@ -12,6 +12,7 @@
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -23,10 +24,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.robwilliams.pack.MainActivity" />
         </activity>
-        <activity android:name="me.robwilliams.pack.ListDetailActivity"
+        <activity
+            android:name=".ListDetailActivity"
             android:label="@string/title_activity_list_detail"
-            android:parentActivityName="me.robwilliams.pack.ListOverviewActivity">
-            <meta-data android:name="android.support.PARENT_ACTIVITY"
+            android:parentActivityName=".ListOverviewActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.robwilliams.pack.ListOverviewActivity" />
         </activity>
 
@@ -34,6 +37,15 @@
             android:name=".data.ListsContentProvider"
             android:authorities="me.robwilliams.pack.lists.contentprovider" >
         </provider>
+
+        <activity
+            android:name=".ListItemDetailActivity"
+            android:label="@string/title_activity_list_item_detail"
+            android:parentActivityName=".ListDetailActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.robwilliams.pack.ListDetailActivity" />
+        </activity>
     </application>
 
 </manifest>

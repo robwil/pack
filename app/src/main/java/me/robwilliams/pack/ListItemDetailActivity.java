@@ -1,6 +1,5 @@
 package me.robwilliams.pack;
 
-import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -8,12 +7,12 @@ import android.view.MenuItem;
 import android.view.View;
 
 
-public class MainActivity extends ActionBarActivity {
+public class ListItemDetailActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_list_item_detail);
     }
 
     @Override
@@ -21,8 +20,11 @@ public class MainActivity extends ActionBarActivity {
         return true;
     }
 
-    public void openListsActivity(View view) {
-        Intent intent = new Intent(this, ListOverviewActivity.class);
-        startActivity(intent);
+    public void saveListItem(View view) {
+
+    }
+
+    public void deleteListItem(View view) {
+
     }
 }
