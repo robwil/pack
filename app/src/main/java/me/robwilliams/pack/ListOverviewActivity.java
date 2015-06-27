@@ -15,7 +15,7 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 
-import me.robwilliams.pack.data.ListsContentProvider;
+import me.robwilliams.pack.data.ListContentProvider;
 
 public class ListOverviewActivity extends ActionBarActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
@@ -40,7 +40,7 @@ public class ListOverviewActivity extends ActionBarActivity
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         String[] projection = { "_id", "name" };
         return new CursorLoader(this,
-                ListsContentProvider.CONTENT_URI, projection, null, null, "weight DESC");
+                ListContentProvider.CONTENT_URI, projection, null, null, "weight DESC");
     }
 
     @Override
@@ -71,8 +71,8 @@ public class ListOverviewActivity extends ActionBarActivity
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent i = new Intent(that, ListDetailActivity.class);
-                Uri listUri = Uri.parse(ListsContentProvider.CONTENT_URI + "/" + id);
-                i.putExtra(ListsContentProvider.CONTENT_ITEM_TYPE, listUri);
+                Uri listUri = Uri.parse(ListContentProvider.CONTENT_URI + "/" + id);
+                i.putExtra(ListContentProvider.CONTENT_ITEM_TYPE, listUri);
                 startActivity(i);
             }
         });

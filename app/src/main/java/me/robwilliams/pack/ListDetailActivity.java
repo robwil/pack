@@ -2,6 +2,7 @@ package me.robwilliams.pack;
 
 import android.app.LoaderManager;
 import android.content.ContentValues;
+import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
@@ -18,7 +19,8 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import me.robwilliams.pack.data.ListsContentProvider;
+import me.robwilliams.pack.data.ItemContentProvider;
+import me.robwilliams.pack.data.ListContentProvider;
 
 
 public class ListDetailActivity extends ActionBarActivity
@@ -31,6 +33,7 @@ public class ListDetailActivity extends ActionBarActivity
     private TextView mEmptyItemsView;
 
     private Uri listUri;
+    private int listId;
 
     private SimpleCursorAdapter adapter;
 
@@ -49,12 +52,12 @@ public class ListDetailActivity extends ActionBarActivity
 
         // check from the saved Instance
         listUri = (savedInstanceState == null) ? null : (Uri) savedInstanceState
-                .getParcelable(ListsContentProvider.CONTENT_ITEM_TYPE);
+                .getParcelable(ListContentProvider.CONTENT_ITEM_TYPE);
 
         // Or passed from the other activity
         if (extras != null) {
             listUri = extras
-                    .getParcelable(ListsContentProvider.CONTENT_ITEM_TYPE);
+                    .getParcelable(ListContentProvider.CONTENT_ITEM_TYPE);
 
             fillData(listUri);
         }
@@ -70,7 +73,7 @@ public class ListDetailActivity extends ActionBarActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         saveState();
-        outState.putParcelable(ListsContentProvider.CONTENT_ITEM_TYPE, listUri);
+        outState.putParcelable(ListContentProvider.CONTENT_ITEM_TYPE, listUri);
     }
 
     @Override
@@ -97,7 +100,11 @@ public class ListDetailActivity extends ActionBarActivity
 
         if (listUri == null) {
             // New list
-            listUri = getContentResolver().insert(ListsContentProvider.CONTENT_URI, values);
+            listUri = getContentResolver().insert(ListContentProvider.CONTENT_URI, values);
+            // @hack: convert content resolver's return value to the true content Uri.
+            // So this will go from lists/X to content://.../lists/X
+            // I have no idea why it doesn't return the value it then expects with query(...)
+            listUri = Uri.parse(ListContentProvider.CONTENT_URI.toString() + "/" + listUri.getPathSegments().get(1));
         } else {
             // Update list
             getContentResolver().update(listUri, values, null, null);
@@ -105,18 +112,21 @@ public class ListDetailActivity extends ActionBarActivity
     }
 
     private void fillData(Uri uri) {
-        String[] projection = { "name", "weight" };
-        Cursor cursor = getContentResolver().query(uri, projection, null, null,
-                null);
+        if (listId != 0) {
+            return; // Must already be in Edit Mode, so don't do all these things
+        }
+        String[] projection = { "_id", "name", "weight" };
+        Cursor cursor = getContentResolver().query(uri, projection, null, null, null);
         if (cursor != null) {
             cursor.moveToFirst();
             String listName = cursor.getString(cursor.getColumnIndexOrThrow("name"));
             mName.setText(listName);
             mWeight.setText(cursor.getString(cursor.getColumnIndexOrThrow("weight")));
+            listId = cursor.getInt(cursor.getColumnIndexOrThrow("_id"));
             cursor.close();
 
             // Since it's Edit mode, modify Title and setup ListView of List Items
-            setTitle("Editing List: " + listName);
+            setTitle("Editing List: " + mName.getText());
             mListItemsTitleView.setVisibility(View.VISIBLE);
             mListItemsView.setVisibility(View.VISIBLE);
             mEmptyItemsView.setVisibility(View.VISIBLE);
@@ -138,10 +148,11 @@ public class ListDetailActivity extends ActionBarActivity
             mListItemsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                    Intent i = new Intent(that, ListDetailActivity.class);
-//                    Uri listUri = Uri.parse(ListsContentProvider.CONTENT_URI + "/" + id);
-//                    i.putExtra(ListsContentProvider.CONTENT_ITEM_TYPE, listUri);
-//                    startActivity(i);
+                    Intent i = new Intent(that, ListItemDetailActivity.class);
+                    Uri listItemUri = Uri.parse(ItemContentProvider.CONTENT_URI + "/" + id);
+                    i.putExtra(ItemContentProvider.CONTENT_ITEM_TYPE, listItemUri);
+                    i.putExtra(ListContentProvider.CONTENT_ID_TYPE, listId);
+                    startActivity(i);
                 }
             });
         }
@@ -149,17 +160,19 @@ public class ListDetailActivity extends ActionBarActivity
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-        return null;
+        String[] projection = { "_id", "name" };
+        return new CursorLoader(this,
+                ItemContentProvider.CONTENT_URI, projection, "list_id=" + listId, null, "weight DESC");
     }
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-
+        adapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-
+        adapter.swapCursor(null);
     }
 
     //
@@ -171,9 +184,11 @@ public class ListDetailActivity extends ActionBarActivity
             Toast.makeText(ListDetailActivity.this, "Name is required",
                     Toast.LENGTH_LONG).show();
         } else {
-            // TODO: Save should not finish() but should reload Activity in Edit mode
-            setResult(RESULT_OK);
-            finish();
+            // Save the list data then transition to Edit Mode via fillData(...)
+            saveState();
+            Toast.makeText(ListDetailActivity.this, "Successfully created list",
+                    Toast.LENGTH_LONG).show();
+            fillData(listUri); // listUri is populated in saveSave()
         }
     }
 
@@ -181,12 +196,15 @@ public class ListDetailActivity extends ActionBarActivity
         mName.setText("");
         mWeight.setText("");
         getContentResolver().delete(listUri, null, null);
+        Toast.makeText(ListDetailActivity.this, "Deleted list",
+                Toast.LENGTH_LONG).show();
         setResult(RESULT_OK);
         finish();
     }
 
     public void addListItem(View view) {
         Intent intent = new Intent(this, ListItemDetailActivity.class);
+        intent.putExtra(ListContentProvider.CONTENT_ID_TYPE, listId);
         startActivity(intent);
     }
 }

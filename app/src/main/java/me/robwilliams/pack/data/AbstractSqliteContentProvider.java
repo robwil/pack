@@ -20,18 +20,15 @@ import java.util.HashSet;
  * Reference: http://www.vogella.com/tutorials/AndroidSQLite/article.html
  */
 public abstract class AbstractSqliteContentProvider extends ContentProvider {
-    private DatabaseHelper databaseHelper;
+    protected DatabaseHelper databaseHelper;
 
-    private final String tableName;
-    private final String[] validColumns;
-    private final String basePath;
-    private final int allItemsId;
-    private final int singleItemId;
-    private final UriMatcher sURIMatcher;
-
-
-    public static Uri CONTENT_URI;
-    public static String CONTENT_ITEM_TYPE;
+    protected final String tableName;
+    protected final String[] validColumns;
+    protected final String authority;
+    protected final String basePath;
+    protected final int allItemsId;
+    protected final int singleItemId;
+    protected final UriMatcher sURIMatcher;
 
     public AbstractSqliteContentProvider(String tableName,
                                          String[] validColumns,
@@ -42,18 +39,13 @@ public abstract class AbstractSqliteContentProvider extends ContentProvider {
         this.tableName = tableName;
         this.allItemsId = allItemsId;
         this.singleItemId = singleItemId;
+        this.authority = authority;
         this.basePath = basePath;
         this.validColumns = validColumns;
 
         sURIMatcher = new UriMatcher(UriMatcher.NO_MATCH);
         sURIMatcher.addURI(authority, basePath, allItemsId);
         sURIMatcher.addURI(authority, basePath + "/#", singleItemId);
-
-        // This is kind of hacky, but since these Uris are essentially constants,
-        // we expose them via a static context
-        CONTENT_URI = Uri.parse("content://" + authority + "/" + basePath);
-        CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + tableName;
-
     }
 
     @Override
@@ -166,5 +158,17 @@ public abstract class AbstractSqliteContentProvider extends ContentProvider {
                 throw new IllegalArgumentException("Unknown columns in projection");
             }
         }
+    }
+
+    protected Uri getContentUri() {
+        return Uri.parse("content://" + authority + "/" + basePath);
+    }
+
+    protected String getContentItemType() {
+        return ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + tableName;
+    }
+
+    protected String getContentIdType() {
+        return "me.robwilliams.content_id/" + tableName;
     }
 }

@@ -1,8 +1,10 @@
 package me.robwilliams.pack.data;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -15,24 +17,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
 
-        db.execSQL("CREATE TABLE `instance` (" +
-                "  `_id` INTEGER PRIMARY KEY," +
-                "  `name` TEXT NOT NULL," +
-                "  `weight` INTEGER NOT NULL DEFAULT '0'" +
-                ");");
-
-        db.execSQL("CREATE TABLE `instance_item` (" +
-                "  `_id` INTEGER PRIMARY KEY," +
-                "  `instance_id` INTEGER NOT NULL," +
-                "  `name` TEXT NOT NULL," +
-                "  `weight` INTEGER NOT NULL DEFAULT '0'," +
-                "  `from_list` TEXT NOT NULL," +
-                "  `should_pack` INTEGER NOT NULL DEFAULT '0'," +
-                "  `packed` INTEGER DEFAULT NULL," +
-//                "  `unpacked_location` TEXT DEFAULT NULL," +
-                "  `repacked` INTEGER DEFAULT NULL" +
-//                "  KEY `instance_link` (`instance_id`)" +
-                ");");
+        db.execSQL("PRAGMA foreign_keys=ON");
 
         db.execSQL("CREATE TABLE `list` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
@@ -40,49 +25,70 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  `weight` INTEGER NOT NULL DEFAULT '0'" +
                 ");");
 
-        db.execSQL("CREATE TABLE `list_item` (" +
+        db.execSQL("CREATE TABLE `item` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `list_id` INTEGER NOT NULL," +
                 "  `name` TEXT NOT NULL," +
+                "  `weight` INTEGER NOT NULL DEFAULT '0'," +
+                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                ");");
+
+        db.execSQL("CREATE TABLE `listset` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `name` TEXT NOT NULL," +
                 "  `weight` INTEGER NOT NULL DEFAULT '0'" +
-//                "  KEY `list_item_link` (`list_id`)" +
+                ");");
+
+        db.execSQL("CREATE TABLE `listset_list` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `listset_id` INTEGER NOT NULL," +
+                "  `list_id` INTEGER NOT NULL," +
+                "  FOREIGN KEY(listset_id)  REFERENCES listset(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                 ");");
 
         db.execSQL("CREATE TABLE `trip` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `name` TEXT NOT NULL," +
-                "  `weight` INTEGER NOT NULL DEFAULT '0'" +
+                "  `timestamp` DATE DEFAULT (datetime('now','localtime'))" +
                 ");");
 
         db.execSQL("CREATE TABLE `trip_list` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `trip_id` INTEGER NOT NULL," +
-                "  `list_id` INTEGER NOT NULL" +
-//                "  UNIQUE KEY `no_dupe_links` (`trip_id`,`list_id`)," +
-//                "  KEY `trip_link` (`trip_id`)," +
-//                "  KEY `list_link` (`list_id`)" +
+                "  `list_id` INTEGER NOT NULL," +
+                "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                 ");");
 
-//        db.execSQL("ALTER TABLE `instance_item`" +
-//                "  ADD CONSTRAINT `instance_link` FOREIGN KEY (`instance_id`) REFERENCES `instance` (`instance_id`) ON DELETE CASCADE ON UPDATE NO ACTION;");
-//
-//        db.execSQL("ALTER TABLE `list_item`" +
-//                "  ADD CONSTRAINT `list_item_link` FOREIGN KEY (`list_id`) REFERENCES `list` (`list_id`) ON DELETE CASCADE ON UPDATE NO ACTION;");
-//
-//        db.execSQL("ALTER TABLE `trip_list`" +
-//                "  ADD CONSTRAINT `list_link` FOREIGN KEY (`list_id`) REFERENCES `list` (`list_id`) ON DELETE CASCADE ON UPDATE NO ACTION," +
-//                "  ADD CONSTRAINT `trip_link` FOREIGN KEY (`trip_id`) REFERENCES `trip` (`trip_id`) ON DELETE CASCADE ON UPDATE NO ACTION;");
+
+        db.execSQL("CREATE TABLE `trip_item` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `trip_id` INTEGER NOT NULL," +
+                "  `item_id` TEXT NOT NULL," +
+                "  `status` INTEGER NOT NULL," +
+                "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(item_id) REFERENCES item(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                ");");
+
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         // Only one version for now, so just implement it as a DROP / recreate.
-        db.execSQL("DROP TABLE IF EXISTS `instance`;");
-        db.execSQL("DROP TABLE IF EXISTS `instance_item`;");
         db.execSQL("DROP TABLE IF EXISTS `list`;");
-        db.execSQL("DROP TABLE IF EXISTS `list_item`;");
+        db.execSQL("DROP TABLE IF EXISTS `item`;");
+        db.execSQL("DROP TABLE IF EXISTS `set`;");
+        db.execSQL("DROP TABLE IF EXISTS `set_list`;");
         db.execSQL("DROP TABLE IF EXISTS `trip`;");
         db.execSQL("DROP TABLE IF EXISTS `trip_list`;");
+        db.execSQL("DROP TABLE IF EXISTS `trip_item`;");
         onCreate(db);
+    }
+
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        // Must turn on foreign keys every time DB is opened or the foreign keys won't be enforced
+        db.execSQL("PRAGMA foreign_keys=ON");
     }
 }

@@ -34,8 +34,13 @@
         </activity>
 
         <provider
-            android:name=".data.ListsContentProvider"
+            android:name=".data.ListContentProvider"
             android:authorities="me.robwilliams.pack.lists.contentprovider" >
+        </provider>
+
+        <provider
+            android:name=".data.ItemContentProvider"
+            android:authorities="me.robwilliams.pack.list_items.contentprovider" >
         </provider>
 
         <activity
