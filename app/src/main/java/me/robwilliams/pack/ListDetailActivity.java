@@ -186,7 +186,7 @@ public class ListDetailActivity extends ActionBarActivity
         } else {
             // Save the list data then transition to Edit Mode via fillData(...)
             saveState();
-            Toast.makeText(ListDetailActivity.this, "Successfully created list",
+            Toast.makeText(ListDetailActivity.this, (listId == 0) ? "Successfully created list" : "Successfully saved list",
                     Toast.LENGTH_LONG).show();
             fillData(listUri); // listUri is populated in saveSave()
         }

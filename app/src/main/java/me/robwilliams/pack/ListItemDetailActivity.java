@@ -48,6 +48,11 @@ public class ListItemDetailActivity extends ActionBarActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        return true;
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         saveState();
@@ -97,6 +102,7 @@ public class ListItemDetailActivity extends ActionBarActivity {
             cursor.close();
 
             // Edit mode, so show delete button
+            setTitle("Editing Item: " + mName.getText());
             findViewById(R.id.delete).setVisibility(View.VISIBLE);
         }
     }
