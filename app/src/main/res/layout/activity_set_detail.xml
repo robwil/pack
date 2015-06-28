@@ -1,8 +1,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.robwilliams.pack.ListDetailActivity"
-    android:orientation="vertical">
+    tools:context="me.robwilliams.pack.SetDetailActivity"
+    android:orientation="vertical" >
 
     <TextView
         android:layout_width="match_parent"
@@ -30,48 +30,18 @@
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/save_list"
+            android:text="@string/save_list_set"
             android:id="@+id/save"
-            android:onClick="saveList" />
+            android:onClick="saveListSet" />
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/delete_list"
+            android:text="@string/delete_list_set"
             android:id="@+id/delete"
-            android:onClick="deleteList"
+            android:onClick="deleteListSet"
             android:visibility="invisible" />
 
     </LinearLayout>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/list_items_title"
-        android:id="@+id/list_items_title"
-        android:visibility="invisible"
-        android:textAppearance="@android:style/TextAppearance.Large"/>
-
-    <ListView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:id="@+id/list_items"
-        android:visibility="invisible" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/no_list_items"
-        android:id="@+id/empty_list_items"
-        android:visibility="invisible" />
-
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/add_list_item"
-        android:id="@+id/add_list_item"
-        android:onClick="addListItem"
-        android:visibility="invisible" />
 
 </LinearLayout>

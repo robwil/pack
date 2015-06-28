@@ -19,5 +19,19 @@
     <string name="save_list_item">Save List Item</string>
     <string name="delete_list_item">Delete List Item</string>
 
-    <string name="hello_world">Hello world!</string>
+    <!-- Strings for Set Overview Activity -->
+    <string name="title_activity_set_overview">List Sets</string>
+    <string name="action_add_set">Add List Set</string>
+    <string name="no_sets">Currently there are no List Sets. Please add one.</string>
+
+
+    <!-- Strings for Set Detail Activity -->
+    <string name="title_activity_set_detail">Add List Set</string>
+    <string name="save_list_set">Save List Set</string>
+    <string name="delete_list_set">Delete List Set</string>
+
+    <!-- Shared Strings used throughout application -->
+    <string name="label_name">Name</string>
+    <string name="label_weight">Weight</string>
+
 </resources>

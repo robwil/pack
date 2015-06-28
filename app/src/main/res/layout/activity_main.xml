@@ -12,7 +12,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lists"
+        android:text="@string/title_activity_list_overview"
         android:id="@+id/listsButton"
         android:onClick="openListsActivity" />
 
@@ -24,7 +24,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Sets of Lists"
+        android:text="@string/title_activity_set_overview"
         android:id="@+id/setsButton"
         android:onClick="openSetsActivity"/>
 

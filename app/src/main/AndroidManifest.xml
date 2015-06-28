@@ -37,10 +37,13 @@
             android:name=".data.ListContentProvider"
             android:authorities="me.robwilliams.pack.lists.contentprovider" >
         </provider>
-
         <provider
             android:name=".data.ItemContentProvider"
             android:authorities="me.robwilliams.pack.list_items.contentprovider" >
+        </provider>
+        <provider
+            android:name=".data.SetContentProvider"
+            android:authorities="me.robwilliams.pack.listsets.contentprovider" >
         </provider>
 
         <activity
@@ -50,6 +53,22 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.robwilliams.pack.ListDetailActivity" />
+        </activity>
+        <activity
+            android:name=".SetOverviewActivity"
+            android:label="@string/title_activity_set_overview"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.robwilliams.pack.MainActivity" />
+        </activity>
+        <activity
+            android:name=".SetDetailActivity"
+            android:label="@string/title_activity_set_detail"
+            android:parentActivityName=".SetOverviewActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.robwilliams.pack.SetOverviewActivity" />
         </activity>
     </application>
 

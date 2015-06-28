@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="me.robwilliams.pack.SetOverviewActivity">
+    <item android:id="@+id/action_add_set" android:title="@string/action_add_set"
+        android:orderInCategory="100" app:showAsAction="always"
+        android:onClick="showSetDetailActivity" />
+</menu>
