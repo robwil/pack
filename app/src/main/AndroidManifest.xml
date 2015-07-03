@@ -28,6 +28,10 @@
             android:name=".data.TripContentProvider"
             android:authorities="me.robwilliams.pack.trips.contentprovider" >
         </provider>
+        <provider
+            android:name=".data.TripSetContentProvider"
+            android:authorities="me.robwilliams.pack.trip_listsets.contentprovider" >
+        </provider>
 
         <activity
             android:name=".MainActivity"

@@ -7,17 +7,23 @@ import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Loader;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Spinner;
 
+import me.robwilliams.pack.data.SetContentProvider;
 import me.robwilliams.pack.data.TripContentProvider;
+import me.robwilliams.pack.data.TripSetContentProvider;
 
 public class TripOverviewActivity extends ActionBarActivity
         implements LoaderManager.LoaderCallbacks<Cursor>{
@@ -85,18 +91,40 @@ public class TripOverviewActivity extends ActionBarActivity
     //
 
     public void showAddTripDialog(MenuItem item) {
+        // Construct dynamic dialog to reference available Sets, as well as Name the Trip
+        Cursor listSets = getContentResolver().query(SetContentProvider.CONTENT_URI, new String[]{"_id", "name"}, null, null, "weight DESC");
+        CursorAdapter adapter = new SimpleCursorAdapter(this,
+                android.R.layout.simple_spinner_item,
+                listSets,
+                new String[] { "name" },
+                new int[] { android.R.id.text1 },
+                0);
+        final LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
         final EditText txtTripName = new EditText(this);
+        final Spinner spnSet = new Spinner(this);
+        spnSet.setAdapter(adapter);
+        layout.addView(txtTripName);
+        layout.addView(spnSet);
 
         new AlertDialog.Builder(this)
             .setTitle("Add Trip")
-            .setMessage("What would you like to call this Trip?")
-            .setView(txtTripName)
+            .setMessage("Select a name and List Set for your Trip.")
+            .setView(layout)
             .setPositiveButton("Add", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
+                    // First, create the Trip with the given name.
                     String tripName = txtTripName.getText().toString();
                     ContentValues values = new ContentValues();
                     values.put("name", tripName);
-                    getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
+                    Uri tripUri = getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
+                    // Next setup the join table relationship between Trip and selected Set
+                    long tripId = Long.parseLong(tripUri.getLastPathSegment());
+                    long setId = spnSet.getSelectedItemId();
+                    values = new ContentValues();
+                    values.put("trip_id", tripId);
+                    values.put("listset_id", setId);
+                    getContentResolver().insert(TripSetContentProvider.CONTENT_URI, values);
                 }
             })
             .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {

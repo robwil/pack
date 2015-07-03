@@ -51,14 +51,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  `timestamp` DATE DEFAULT (datetime('now','localtime'))" +
                 ");");
 
-        db.execSQL("CREATE TABLE `trip_list` (" +
+        db.execSQL("CREATE TABLE `trip_listset` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `trip_id` INTEGER NOT NULL," +
-                "  `list_id` INTEGER NOT NULL," +
+                "  `listset_id` INTEGER NOT NULL," +
                 "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
-                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                "  FOREIGN KEY(listset_id) REFERENCES listset(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                 ");");
-
 
         db.execSQL("CREATE TABLE `trip_item` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
