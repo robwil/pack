@@ -28,4 +28,9 @@ public class MainActivity extends ActionBarActivity {
         Intent intent = new Intent(this, SetOverviewActivity.class);
         startActivity(intent);
     }
+
+    public void openTripsActivity(View view) {
+        Intent intent = new Intent(this, TripOverviewActivity.class);
+        startActivity(intent);
+    }
 }

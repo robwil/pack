@@ -31,10 +31,16 @@
     <string name="delete_list_set">Delete List Set</string>
     <string name="listset_lists_title">Lists in this Set</string>
 
+    <!-- Strings for Trip Overview Activity -->
+    <string name="title_activity_trip_overview">Trips</string>
+    <string name="action_add_trip">Add Trip</string>
+    <string name="no_trips">Currently there are no Trips. Please add one.</string>
+
     <!-- Shared Strings used throughout application -->
     <string name="label_name">Name</string>
     <string name="label_weight">Weight</string>
     <string name="no_listset_lists">Currently this Set does not contain any Lists.</string>
+
 
 
 </resources>

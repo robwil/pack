@@ -12,8 +12,8 @@ public class ListsetListContentProvider extends AbstractSqliteContentProvider {
               /*validColumns = */   new String[]{"_id", "listset_id", "list_id"},
               /*authority = */      "me.robwilliams.pack.listset_lists.contentprovider",
               /*basePath = */       "listset_lists",
-              /*allItemsId = */     10,
-              /*singleItemId = */   20);
+              /*allItemsId = */     70,
+              /*singleItemId = */   80);
 
         CONTENT_URI = getContentUri();
         CONTENT_ITEM_TYPE = getContentItemType();

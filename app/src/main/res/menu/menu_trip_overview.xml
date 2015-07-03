@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="me.robwilliams.pack.TripOverviewActivity">
+    <item android:id="@+id/action_add_set" android:title="@string/action_add_trip"
+        android:orderInCategory="100" app:showAsAction="always"
+        android:onClick="showAddTripDialog" />
+</menu>
