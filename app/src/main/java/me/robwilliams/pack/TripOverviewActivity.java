@@ -1,10 +1,12 @@
 package me.robwilliams.pack;
 
+import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
@@ -78,10 +80,10 @@ public class TripOverviewActivity extends ActionBarActivity
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                Intent i = new Intent(that, TripDetailActivity.class);
-//                Uri tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + id);
-//                i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
-//                startActivity(i);
+                Intent i = new Intent(that, TripDetailActivity.class);
+                Uri tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + id);
+                i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
+                startActivity(i);
             }
         });
     }
