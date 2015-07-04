@@ -2,7 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="me.robwilliams.pack.ListDetailActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
 
     <TextView
         android:layout_width="match_parent"

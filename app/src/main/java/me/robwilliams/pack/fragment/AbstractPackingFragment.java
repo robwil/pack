@@ -35,7 +35,7 @@ abstract public class AbstractPackingFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_should_pack, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_packing, container, false);
         mainLayout = (LinearLayout) rootView.findViewById(R.id.main_fragment_layout);
 
         // Look up resource id for built-in Android checkmark icon

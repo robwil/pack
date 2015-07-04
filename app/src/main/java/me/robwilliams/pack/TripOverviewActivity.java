@@ -96,12 +96,16 @@ public class TripOverviewActivity extends ActionBarActivity
         // Construct dynamic dialog to reference available Sets, as well as Name the Trip
         Cursor listSets = getContentResolver().query(SetContentProvider.CONTENT_URI, new String[]{"_id", "name"}, null, null, "weight DESC");
         CursorAdapter adapter = new SimpleCursorAdapter(this,
-                android.R.layout.simple_spinner_item,
+                android.R.layout.simple_spinner_dropdown_item,
                 listSets,
                 new String[] { "name" },
                 new int[] { android.R.id.text1 },
                 0);
         final LinearLayout layout = new LinearLayout(this);
+        int dpPadding = 16;  // 16 dps
+        final float scale = getResources().getDisplayMetrics().density;
+        int pxPadding = (int) (dpPadding * scale + 0.5f);
+        layout.setPadding(pxPadding, pxPadding, pxPadding, pxPadding);
         layout.setOrientation(LinearLayout.VERTICAL);
         final EditText txtTripName = new EditText(this);
         final Spinner spnSet = new Spinner(this);
