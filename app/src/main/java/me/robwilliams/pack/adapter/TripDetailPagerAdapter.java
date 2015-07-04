@@ -5,6 +5,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import java.util.ArrayList;
+
+import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.fragment.PackFragment;
 import me.robwilliams.pack.fragment.RepackFragment;
 import me.robwilliams.pack.fragment.ShouldPackFragment;
@@ -13,10 +16,12 @@ public class TripDetailPagerAdapter extends FragmentPagerAdapter {
 
     private String[] pageTitles = {"Should Pack", "Pack", "Repack"};
     private int tripId;
+    private ArrayList<TripItem> tripItems;
 
-    public TripDetailPagerAdapter(FragmentManager fm, int tripId) {
+    public TripDetailPagerAdapter(FragmentManager fm, int tripId, ArrayList<TripItem> tripItems) {
         super(fm);
         this.tripId = tripId;
+        this.tripItems = tripItems;
     }
 
     @Override
@@ -24,6 +29,7 @@ public class TripDetailPagerAdapter extends FragmentPagerAdapter {
 
         Bundle bundle = new Bundle();
         bundle.putInt("tripId", tripId);
+        bundle.putParcelableArrayList("tripItems", tripItems);
 
         switch (position) {
             case 0:
@@ -54,5 +60,11 @@ public class TripDetailPagerAdapter extends FragmentPagerAdapter {
             return "";
         }
         return pageTitles[position];
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+        // This forces views to be recreated whenever the data set change notification comes.
+        return POSITION_NONE;
     }
 }
