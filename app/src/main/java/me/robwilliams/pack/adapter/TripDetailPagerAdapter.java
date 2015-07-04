@@ -1,5 +1,6 @@
 package me.robwilliams.pack.adapter;
 
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -11,21 +12,32 @@ import me.robwilliams.pack.fragment.ShouldPackFragment;
 public class TripDetailPagerAdapter extends FragmentPagerAdapter {
 
     private String[] pageTitles = {"Should Pack", "Pack", "Repack"};
+    private int tripId;
 
-    public TripDetailPagerAdapter(FragmentManager fm) {
+    public TripDetailPagerAdapter(FragmentManager fm, int tripId) {
         super(fm);
+        this.tripId = tripId;
     }
 
     @Override
     public Fragment getItem(int position) {
 
+        Bundle bundle = new Bundle();
+        bundle.putInt("tripId", tripId);
+
         switch (position) {
             case 0:
-                return new ShouldPackFragment();
+                ShouldPackFragment shouldPackFragment = new ShouldPackFragment();
+                shouldPackFragment.setArguments(bundle);
+                return shouldPackFragment;
             case 1:
-                return new PackFragment();
+                PackFragment packFragment = new PackFragment();
+                packFragment.setArguments(bundle);
+                return packFragment;
             case 2:
-                return new RepackFragment();
+                RepackFragment repackFragment = new RepackFragment();
+                repackFragment.setArguments(bundle);
+                return repackFragment;
         }
 
         return null;

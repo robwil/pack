@@ -23,13 +23,6 @@ public class TripDetailActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_trip_detail);
 
-        viewPager = (ViewPager) findViewById(R.id.pager);
-        mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(mAdapter);
-
-        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
-        tabs.setViewPager(viewPager);
-
         // Restore Trip details from saved instance or Intent
         Bundle extras = getIntent().getExtras();
 
@@ -52,7 +45,15 @@ public class TripDetailActivity extends ActionBarActivity {
             String tripName = cursor.getString(cursor.getColumnIndexOrThrow("name"));
             tripId = cursor.getInt(cursor.getColumnIndexOrThrow("_id"));
             cursor.close();
+
+            // Now that we've loaded the Trip, finish setting up UI
             setTitle("Trip: " + tripName);
+            viewPager = (ViewPager) findViewById(R.id.pager);
+            mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId);
+            viewPager.setAdapter(mAdapter);
+
+            PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+            tabs.setViewPager(viewPager);
         }
     }
 

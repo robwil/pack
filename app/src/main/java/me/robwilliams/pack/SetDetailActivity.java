@@ -20,7 +20,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import me.robwilliams.pack.data.DatabaseHelper;
-import me.robwilliams.pack.data.ListContentProvider;
 import me.robwilliams.pack.data.ListsetListContentProvider;
 import me.robwilliams.pack.data.SetContentProvider;
 
