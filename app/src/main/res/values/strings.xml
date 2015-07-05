@@ -24,12 +24,12 @@
     <string name="action_add_set">Add List Set</string>
     <string name="no_sets">Currently there are no List Sets. Please add one.</string>
 
-
     <!-- Strings for Set Detail Activity -->
     <string name="title_activity_set_detail">Add List Set</string>
     <string name="save_list_set">Save List Set</string>
     <string name="delete_list_set">Delete List Set</string>
     <string name="listset_lists_title">Lists in this Set</string>
+    <string name="no_listset_lists">Currently this Set does not contain any Lists.</string>
 
     <!-- Strings for Trip Overview Activity -->
     <string name="title_activity_trip_overview">Trips</string>
@@ -38,10 +38,11 @@
 
     <!-- Strings for Trip Detail Activity -->
     <string name="title_activity_trip_detail">Trip Detail</string>
+    <string name="action_copy_trip">Copy Trip</string>
+    <string name="action_delete_trip">Delete Trip</string>
 
     <!-- Shared Strings used throughout application -->
     <string name="label_name">Name</string>
     <string name="label_weight">Weight</string>
-    <string name="no_listset_lists">Currently this Set does not contain any Lists.</string>
 
 </resources>

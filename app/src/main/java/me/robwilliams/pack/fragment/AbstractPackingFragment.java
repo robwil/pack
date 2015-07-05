@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import me.robwilliams.pack.R;
@@ -27,11 +28,12 @@ abstract public class AbstractPackingFragment extends Fragment {
 
     protected int tripId;
     protected ArrayList<TripItem> tripItems;
+    protected ArrayList<TripItem> sortedTripItems;
     protected Map<Integer, TripItem> tripItemMap;
 
-    protected final static int STATUS_SHOULD_PACK = 1;
-    protected final static int STATUS_PACKED = 2;
-    protected final static int STATUS_REPACKED = 3;
+    public final static int STATUS_SHOULD_PACK = 1;
+    public final static int STATUS_PACKED = 2;
+    public final static int STATUS_REPACKED = 3;
 
     abstract protected int getCurrentPageStatus();
 
@@ -62,7 +64,8 @@ abstract public class AbstractPackingFragment extends Fragment {
     }
 
     protected void sortTripItems() {
-        Collections.sort(tripItems, new Comparator<TripItem>() {
+        sortedTripItems = new ArrayList<>(tripItems);
+        Collections.sort(sortedTripItems, new Comparator<TripItem>() {
             @Override
             public int compare(TripItem lhs, TripItem rhs) {
                 return lhs.getStatus() - rhs.getStatus();
@@ -72,13 +75,15 @@ abstract public class AbstractPackingFragment extends Fragment {
 
     public void populateView() {
         // For non-Should Pack fragment, sort Trip Items by status ASC first
+        List<TripItem> listToIterate = tripItems;
         if (getCurrentPageStatus() > STATUS_SHOULD_PACK) {
             sortTripItems();
+            listToIterate = sortedTripItems;
         }
         // Loop through cursor and dynamically create interface of checkable items with Category titles
         mainLayout.removeAllViews();
         String currentListName = null;
-        for (TripItem tripItem : tripItems) {
+        for (TripItem tripItem : listToIterate) {
             int status = tripItem.getStatus();
             if (status >= getCurrentPageStatus() - 1) {
                 if (getCurrentPageStatus() == STATUS_SHOULD_PACK && !tripItem.getListName().equals(currentListName)) {
