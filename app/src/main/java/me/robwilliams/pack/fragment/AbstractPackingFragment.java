@@ -12,6 +12,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,13 +61,27 @@ abstract public class AbstractPackingFragment extends Fragment {
         return rootView;
     }
 
+    protected void sortTripItems() {
+        Collections.sort(tripItems, new Comparator<TripItem>() {
+            @Override
+            public int compare(TripItem lhs, TripItem rhs) {
+                return lhs.getStatus() - rhs.getStatus();
+            }
+        });
+    }
+
     public void populateView() {
+        // For non-Should Pack fragment, sort Trip Items by status ASC first
+        if (getCurrentPageStatus() > STATUS_SHOULD_PACK) {
+            sortTripItems();
+        }
         // Loop through cursor and dynamically create interface of checkable items with Category titles
+        mainLayout.removeAllViews();
         String currentListName = null;
         for (TripItem tripItem : tripItems) {
             int status = tripItem.getStatus();
             if (status >= getCurrentPageStatus() - 1) {
-                if (!tripItem.getListName().equals(currentListName)) {
+                if (getCurrentPageStatus() == STATUS_SHOULD_PACK && !tripItem.getListName().equals(currentListName)) {
                     // Encountered new list name so add as title-like TextView
                     currentListName = tripItem.getListName();
                     createAndAddTextView(currentListName);
@@ -111,6 +127,10 @@ abstract public class AbstractPackingFragment extends Fragment {
                 }
                 checkedTextView.setChecked(currentItemStatus < getCurrentPageStatus());
                 tripItemMap.get(itemId).setStatus(newItemStatus);
+                // For non-Should Pack view, need to resort and regenerate view to react with new status
+                if (getCurrentPageStatus() > STATUS_SHOULD_PACK) {
+                    populateView();
+                }
             }
         });
         mainLayout.addView(checkedTextView);

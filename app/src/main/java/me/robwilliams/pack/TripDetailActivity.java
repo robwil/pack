@@ -66,11 +66,15 @@ public class TripDetailActivity extends ActionBarActivity {
 
             if (cursor != null) {
                 // Loop through cursor and store items in a local repository
+                int maximumStatus = 0;
                 while (cursor.moveToNext()) {
                     String listName = cursor.getString(cursor.getColumnIndexOrThrow("list_name"));
                     int itemId = cursor.getInt(cursor.getColumnIndexOrThrow("item_id"));
                     String itemName = cursor.getString(cursor.getColumnIndexOrThrow("item_name"));
                     int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                    if (status > maximumStatus) {
+                        maximumStatus = status;
+                    }
                     tripItems.add(new TripItem(itemId, listName, itemName, status));
                 }
 
@@ -96,6 +100,10 @@ public class TripDetailActivity extends ActionBarActivity {
                     @Override
                     public void onPageScrollStateChanged(int state) {}
                 });
+
+                // Set current tab based on maximum status in tripItems
+                // can just pass status value directly since first page is Should Pack, second page is Pack, etc.
+                viewPager.setCurrentItem(maximumStatus);
             }
         }
     }

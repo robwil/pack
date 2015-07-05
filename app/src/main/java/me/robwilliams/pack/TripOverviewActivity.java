@@ -1,6 +1,5 @@
 package me.robwilliams.pack;
 
-import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
