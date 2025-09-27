@@ -8,7 +8,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.View;
@@ -23,7 +23,7 @@ import me.robwilliams.pack.data.ItemContentProvider;
 import me.robwilliams.pack.data.ListContentProvider;
 
 
-public class ListDetailActivity extends ActionBarActivity
+public class ListDetailActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private EditText mName;

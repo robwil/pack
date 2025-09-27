@@ -8,8 +8,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
+import androidx.viewpager.widget.ViewPager;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
@@ -29,7 +29,7 @@ import me.robwilliams.pack.data.TripItemContentProvider;
 import me.robwilliams.pack.data.TripSetContentProvider;
 import me.robwilliams.pack.fragment.AbstractPackingFragment;
 
-public class TripDetailActivity extends ActionBarActivity {
+public class TripDetailActivity extends AppCompatActivity {
 
     private ViewPager viewPager;
     private TripDetailPagerAdapter mAdapter;

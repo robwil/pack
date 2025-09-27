@@ -3,7 +3,7 @@ package me.robwilliams.pack;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -15,7 +15,7 @@ import me.robwilliams.pack.data.ItemContentProvider;
 import me.robwilliams.pack.data.ListContentProvider;
 
 
-public class ListItemDetailActivity extends ActionBarActivity {
+public class ListItemDetailActivity extends AppCompatActivity {
 
     private EditText mName;
     private EditText mWeight;
