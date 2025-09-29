@@ -28,3 +28,6 @@ local.properties
 
 .claude/settings.local.json
 CLAUDE.local.md
+
+app/release/
+extracted/
