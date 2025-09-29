@@ -10,7 +10,7 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +26,7 @@ import me.robwilliams.pack.data.SetContentProvider;
 import me.robwilliams.pack.data.TripContentProvider;
 import me.robwilliams.pack.data.TripSetContentProvider;
 
-public class TripOverviewActivity extends ActionBarActivity
+public class TripOverviewActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private SimpleCursorAdapter adapter;

@@ -8,7 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.AdapterView;
@@ -24,7 +24,7 @@ import me.robwilliams.pack.data.ListsetListContentProvider;
 import me.robwilliams.pack.data.SetContentProvider;
 
 
-public class SetDetailActivity extends ActionBarActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+public class SetDetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private EditText mName;
     private EditText mWeight;
