@@ -25,3 +25,6 @@ local.properties
 
 # Log Files
 *.log
+
+.claude/settings.local.json
+CLAUDE.local.md
