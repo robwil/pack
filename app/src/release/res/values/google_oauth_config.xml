@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google OAuth Configuration for RELEASE builds -->
+    <string name="server_client_id">657567061984-8u1k587866s6u34rq1ag43v9b8trf3dl.apps.googleusercontent.com</string>
+
+    <!-- Build type identifier for logging/debugging -->
+    <string name="build_type">release</string>
+</resources>

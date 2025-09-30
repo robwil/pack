@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Google OAuth Configuration for DEBUG builds -->
+    <string name="server_client_id">657567061984-0a4ad7152spdvmq3j8hbvgsvc7e93pp6.apps.googleusercontent.com</string>
+
+    <!-- Build type identifier for logging/debugging -->
+    <string name="build_type">debug</string>
+</resources>
