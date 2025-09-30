@@ -118,7 +118,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
 
         // Set checkbox state immediately without any animation
         boolean isChecked = tripItem.getStatus() >= currentPageStatus;
-        checkBox.setImageResource(isChecked ? android.R.drawable.checkbox_on_background : android.R.drawable.checkbox_off_background);
+        checkBox.setImageResource(isChecked ? R.drawable.ic_checkbox_checked : R.drawable.ic_checkbox_unchecked);
 
         itemLayout.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -130,7 +130,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
 
                 // Update checkbox state immediately
                 boolean newCheckedState = newItemStatus >= currentPageStatus;
-                checkBox.setImageResource(newCheckedState ? android.R.drawable.checkbox_on_background : android.R.drawable.checkbox_off_background);
+                checkBox.setImageResource(newCheckedState ? R.drawable.ic_checkbox_checked : R.drawable.ic_checkbox_unchecked);
 
                 ContentValues values = new ContentValues();
                 values.put("item_id", itemId);
