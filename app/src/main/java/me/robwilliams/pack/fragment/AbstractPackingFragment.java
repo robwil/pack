@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
+import android.widget.ExpandableListView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -15,21 +16,29 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import me.robwilliams.pack.R;
+import me.robwilliams.pack.adapter.PackingListExpandableAdapter;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
 
-abstract public class AbstractPackingFragment extends Fragment {
-    protected LinearLayout mainLayout;
+abstract public class AbstractPackingFragment extends Fragment implements PackingListExpandableAdapter.OnDataChangeListener {
+    protected ExpandableListView expandableListView;
+    protected PackingListExpandableAdapter expandableListAdapter;
     protected int checkMarkDrawableResId;
 
     protected int tripId;
     protected ArrayList<TripItem> tripItems;
     protected ArrayList<TripItem> sortedTripItems;
     protected Map<Integer, TripItem> tripItemMap;
+    protected HashMap<String, List<TripItem>> groupedTripItems;
+    protected List<String> listNames;
+    protected Set<String> expandedGroups; // Track which groups are expanded
 
     public final static int STATUS_SHOULD_PACK = 1;
     public final static int STATUS_PACKED = 2;
@@ -40,7 +49,7 @@ abstract public class AbstractPackingFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_packing, container, false);
-        mainLayout = (LinearLayout) rootView.findViewById(R.id.main_fragment_layout);
+        expandableListView = (ExpandableListView) rootView.findViewById(R.id.expandable_list_view);
 
         // Look up resource id for built-in Android checkmark icon
         TypedValue value = new TypedValue();
@@ -58,6 +67,9 @@ abstract public class AbstractPackingFragment extends Fragment {
             tripItemMap.put(tripItem.getItemId(), tripItem);
         }
 
+        // Initialize expanded groups tracking
+        expandedGroups = new HashSet<>();
+
         populateView();
 
         return rootView;
@@ -74,70 +86,151 @@ abstract public class AbstractPackingFragment extends Fragment {
     }
 
     public void populateView() {
+        // Defensive check to prevent crashes if fragment is being destroyed
+        if (getActivity() == null || expandableListView == null) {
+            return;
+        }
+
+        // Save current expansion states before rebuilding
+        saveExpansionStates();
+
+        groupItemsByList();
+
+        expandableListAdapter = new PackingListExpandableAdapter(
+            getActivity(),
+            listNames,
+            groupedTripItems,
+            tripItemMap,
+            tripId,
+            getCurrentPageStatus()
+        );
+
+        expandableListView.setAdapter(expandableListAdapter);
+        expandableListAdapter.setOnDataChangeListener(this);
+
+        // Restore expansion states instead of expanding all groups
+        restoreExpansionStates();
+    }
+
+    private void saveExpansionStates() {
+        if (expandableListView != null && expandableListAdapter != null && listNames != null) {
+            expandedGroups.clear();
+            for (int i = 0; i < listNames.size(); i++) {
+                if (expandableListView.isGroupExpanded(i)) {
+                    expandedGroups.add(listNames.get(i));
+                }
+            }
+        }
+    }
+
+    private void restoreExpansionStates() {
+        if (listNames == null) {
+            return;
+        }
+
+        // Handle first-time setup separately from restoration
+        if (expandedGroups.isEmpty()) {
+            performInitialExpansionSetup();
+        } else {
+            // Restore previously saved expansion states
+            for (int i = 0; i < listNames.size(); i++) {
+                String groupName = listNames.get(i);
+                if (expandedGroups.contains(groupName)) {
+                    expandableListView.expandGroup(i);
+                }
+            }
+        }
+    }
+
+    private void performInitialExpansionSetup() {
+        // Define initial expansion behavior for first-time setup
+        // Current behavior: expand all groups for better discoverability
+        for (int i = 0; i < listNames.size(); i++) {
+            expandableListView.expandGroup(i);
+            expandedGroups.add(listNames.get(i));
+        }
+
+        // Alternative behaviors (commented out):
+        //
+        // Expand only first group:
+        // if (!listNames.isEmpty()) {
+        //     expandableListView.expandGroup(0);
+        //     expandedGroups.add(listNames.get(0));
+        // }
+        //
+        // Expand no groups (all collapsed):
+        // (don't expand anything, leave expandedGroups empty)
+    }
+
+    private void groupItemsByList() {
         // For non-Should Pack fragment, sort Trip Items by status ASC first
         List<TripItem> listToIterate = tripItems;
         if (getCurrentPageStatus() > STATUS_SHOULD_PACK) {
             sortTripItems();
             listToIterate = sortedTripItems;
         }
-        // Loop through cursor and dynamically create interface of checkable items with Category titles
-        mainLayout.removeAllViews();
-        String currentListName = null;
+
+        groupedTripItems = new LinkedHashMap<>();
+        listNames = new ArrayList<>();
+
         for (TripItem tripItem : listToIterate) {
             int status = tripItem.getStatus();
             if (status >= getCurrentPageStatus() - 1) {
-                if (getCurrentPageStatus() == STATUS_SHOULD_PACK && !tripItem.getListName().equals(currentListName)) {
-                    // Encountered new list name so add as title-like TextView
-                    currentListName = tripItem.getListName();
-                    createAndAddTextView(currentListName);
+                String listName = tripItem.getListName();
+
+                if (!groupedTripItems.containsKey(listName)) {
+                    groupedTripItems.put(listName, new ArrayList<TripItem>());
+                    listNames.add(listName);
                 }
-                createAndAddCheckItem(tripItem.getItemId(), tripItem.getItemName(), status);
+
+                groupedTripItems.get(listName).add(tripItem);
             }
         }
     }
 
-    protected void createAndAddTextView(String text) {
-        TextView textView = new TextView(getActivity());
-        textView.setTextAppearance(getActivity(), android.R.style.TextAppearance_Large);
-        textView.setText(text);
-        mainLayout.addView(textView);
+    @Override
+    public void onDataChanged() {
+        // Re-populate the view when data changes for non-Should Pack tabs
+        // Use smarter update instead of full rebuild to preserve expansion states
+        updateDataSmartly();
     }
 
-    protected void createAndAddCheckItem(final int itemId, final String itemText, int status) {
-        final CheckedTextView checkedTextView = new CheckedTextView(getActivity());
-        checkedTextView.setText(itemText);
-        checkedTextView.setCheckMarkDrawable(checkMarkDrawableResId);
-        checkedTextView.setChecked(status >= getCurrentPageStatus());
-        checkedTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Since this click handler is operating when status may have changed, always look up values
-                // from the tripItemMap
-
-                int currentItemStatus = tripItemMap.get(itemId).getStatus();
-                int newItemStatus = currentItemStatus >= getCurrentPageStatus() ? getCurrentPageStatus() - 1 : getCurrentPageStatus();
-
-                ContentValues values = new ContentValues();
-                values.put("item_id", itemId);
-                values.put("trip_id", tripId);
-                values.put("status", newItemStatus);
-                if (currentItemStatus == 0) {
-                    getActivity().getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
-                } else if (currentItemStatus == STATUS_SHOULD_PACK && getCurrentPageStatus() == STATUS_SHOULD_PACK) {
-                    getActivity().getContentResolver().delete(TripItemContentProvider.CONTENT_URI,
-                            "item_id=" + itemId + " AND trip_id=" + tripId, null);
-                } else {
-                    getActivity().getContentResolver().update(TripItemContentProvider.CONTENT_URI, values,
-                            "item_id=" + itemId + " AND trip_id=" + tripId, null);
-                }
-                checkedTextView.setChecked(currentItemStatus < getCurrentPageStatus());
-                tripItemMap.get(itemId).setStatus(newItemStatus);
-                // For non-Should Pack view, need to resort and regenerate view to react with new status
-                if (getCurrentPageStatus() > STATUS_SHOULD_PACK) {
-                    populateView();
-                }
-            }
-        });
-        mainLayout.addView(checkedTextView);
+    @Override
+    public void onDestroyView() {
+        // Clean up adapter references to prevent memory leaks
+        if (expandableListAdapter != null) {
+            expandableListAdapter.clearDataChangeListener();
+            expandableListAdapter = null;
+        }
+        expandableListView = null;
+        super.onDestroyView();
     }
+
+    @Override
+    public void onDetach() {
+        // Additional cleanup when fragment is detached
+        tripItemMap = null;
+        groupedTripItems = null;
+        listNames = null;
+        expandedGroups = null;
+        super.onDetach();
+    }
+
+    private void updateDataSmartly() {
+        // Defensive check to prevent crashes if fragment is being destroyed
+        if (getActivity() == null || expandableListView == null) {
+            return;
+        }
+
+        groupItemsByList();
+
+        if (expandableListAdapter != null) {
+            // Update existing adapter data instead of creating new adapter
+            expandableListAdapter.updateData(listNames, groupedTripItems, tripItemMap);
+        } else {
+            // Fallback to full rebuild if adapter doesn't exist yet
+            populateView();
+        }
+    }
+
 }
