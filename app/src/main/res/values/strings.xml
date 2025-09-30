@@ -45,4 +45,8 @@
     <string name="label_name">Name</string>
     <string name="label_weight">Weight</string>
 
+    <!-- Google Drive API Configuration is in build variant specific files:
+         app/src/debug/res/values/google_oauth_config.xml
+         app/src/release/res/values/google_oauth_config.xml -->
+
 </resources>
