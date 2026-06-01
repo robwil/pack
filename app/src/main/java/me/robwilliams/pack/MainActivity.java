@@ -109,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void openBagsActivity(View view) {
+        Intent intent = new Intent(this, BagManagementActivity.class);
+        startActivity(intent);
+    }
+
     public void openCloudBackup(View view) {
         showCloudBackupDialog();
     }

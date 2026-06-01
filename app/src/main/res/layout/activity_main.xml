@@ -49,6 +49,18 @@
         android:layout_weight="1" />
 
     <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Bags"
+        android:id="@+id/bagsButton"
+        android:onClick="openBagsActivity" />
+
+    <View
+        android:layout_width="1dp"
+        android:layout_height="0dip"
+        android:layout_weight="1" />
+
+    <Button
         android:id="@+id/cloudBackupButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

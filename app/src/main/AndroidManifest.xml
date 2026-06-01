@@ -98,6 +98,14 @@
                 android:value="me.robwilliams.pack.SetOverviewActivity" />
         </activity>
         <activity
+            android:name=".BagManagementActivity"
+            android:label="@string/title_activity_bag_management"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.robwilliams.pack.MainActivity" />
+        </activity>
+        <activity
             android:name=".TripOverviewActivity"
             android:label="@string/title_activity_trip_overview"
             android:parentActivityName=".MainActivity" >
