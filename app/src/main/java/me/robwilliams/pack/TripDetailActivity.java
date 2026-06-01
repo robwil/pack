@@ -19,10 +19,14 @@ import com.astuetz.PagerSlidingTabStrip;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import me.robwilliams.pack.adapter.TripDetailPagerAdapter;
+import me.robwilliams.pack.data.Bag;
+import me.robwilliams.pack.data.BagContentProvider;
 import me.robwilliams.pack.data.DatabaseHelper;
+import me.robwilliams.pack.data.TripBagContentProvider;
 import me.robwilliams.pack.data.TripContentProvider;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
@@ -36,6 +40,7 @@ public class TripDetailActivity extends AppCompatActivity {
     private Uri tripUri;
     private int tripId;
     private ArrayList<TripItem> tripItems;
+    private ArrayList<Bag> tripBags;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -112,10 +117,26 @@ public class TripDetailActivity extends AppCompatActivity {
                             quantity, bagId, bagName, bagColor, bagHintId));
                 }
 
+                // Load trip bags
+                tripBags = new ArrayList<>();
+                Cursor bagCursor = db.rawQuery(
+                        "SELECT B._id, B.name, B.color FROM trip_bag TB " +
+                        "INNER JOIN bag B ON B._id = TB.bag_id " +
+                        "WHERE TB.trip_id = " + tripId + " ORDER BY B.name ASC", null);
+                if (bagCursor != null) {
+                    while (bagCursor.moveToNext()) {
+                        tripBags.add(new Bag(
+                                bagCursor.getInt(0),
+                                bagCursor.getString(1),
+                                bagCursor.getString(2)));
+                    }
+                    bagCursor.close();
+                }
+
                 // And now with the Trip Items, finish setting up UI
                 setTitle("Trip: " + tripName);
                 viewPager = (ViewPager) findViewById(R.id.pager);
-                mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems);
+                mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
                 viewPager.setAdapter(mAdapter);
 
                 PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
@@ -187,6 +208,15 @@ public class TripDetailActivity extends AppCompatActivity {
                             getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
                         }
                     }
+                    // Copy trip bags
+                    if (tripBags != null) {
+                        for (Bag bag : tripBags) {
+                            values = new ContentValues();
+                            values.put("trip_id", tripId);
+                            values.put("bag_id", bag.getId());
+                            getContentResolver().insert(TripBagContentProvider.CONTENT_URI, values);
+                        }
+                    }
                     // Then transition to the new Trip
                     Intent i = new Intent(that, TripDetailActivity.class);
                     tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + tripId);
@@ -199,6 +229,20 @@ public class TripDetailActivity extends AppCompatActivity {
                 }
             })
             .show();
+    }
+
+    public void showTripBagSelection(MenuItem item) {
+        TripBagSelectionDialogHelper.show(this, tripId,
+                new TripBagSelectionDialogHelper.OnBagsChangedListener() {
+                    @Override
+                    public void onBagsChanged(List<Bag> activeBags) {
+                        tripBags = new ArrayList<>(activeBags);
+                        mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
+                        viewPager.setAdapter(mAdapter);
+                        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+                        tabs.setViewPager(viewPager);
+                    }
+                });
     }
 
     public void deleteTrip(MenuItem item) {

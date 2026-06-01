@@ -40,6 +40,7 @@
     <string name="title_activity_trip_detail">Trip Detail</string>
     <string name="action_copy_trip">Copy Trip</string>
     <string name="action_delete_trip">Delete Trip</string>
+    <string name="action_manage_trip_bags">Bags</string>
 
     <!-- Strings for Bag Management Activity -->
     <string name="title_activity_bag_management">Bags</string>

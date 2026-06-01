@@ -24,6 +24,7 @@ import java.util.Set;
 
 import me.robwilliams.pack.R;
 import me.robwilliams.pack.adapter.PackingListExpandableAdapter;
+import me.robwilliams.pack.data.Bag;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
 
@@ -39,6 +40,7 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
     protected HashMap<String, List<TripItem>> groupedTripItems;
     protected List<String> listNames;
     protected Set<String> expandedGroups; // Track which groups are expanded
+    protected ArrayList<Bag> tripBags;
 
     public final static int STATUS_SHOULD_PACK = 1;
     public final static int STATUS_PACKED = 2;
@@ -60,6 +62,8 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
         Bundle arguments = getArguments();
         tripId = arguments.getInt("tripId");
         tripItems = arguments.getParcelableArrayList("tripItems");
+        tripBags = arguments.getParcelableArrayList("tripBags");
+        if (tripBags == null) tripBags = new ArrayList<>();
 
         // Put trip items in Map for easy access
         tripItemMap = new HashMap<>();
@@ -102,7 +106,8 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
             groupedTripItems,
             tripItemMap,
             tripId,
-            getCurrentPageStatus()
+            getCurrentPageStatus(),
+            tripBags
         );
 
         expandableListView.setAdapter(expandableListAdapter);

@@ -2,6 +2,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="me.robwilliams.pack.TripDetailActivity">
+    <item android:id="@+id/action_manage_bags" android:title="@string/action_manage_trip_bags"
+        android:orderInCategory="50" app:showAsAction="ifRoom"
+        android:onClick="showTripBagSelection" />
     <item android:id="@+id/action_copy_trip" android:title="@string/action_copy_trip"
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="showCopyTripDialog" />
