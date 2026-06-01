@@ -9,7 +9,7 @@ public class TripItemContentProvider extends AbstractSqliteContentProvider {
 
     public TripItemContentProvider() {
         super(/*tableName = */      "trip_item",
-              /*validColumns = */   new String[]{"_id", "trip_id", "item_id", "status"},
+              /*validColumns = */   new String[]{"_id", "trip_id", "item_id", "status", "quantity", "bag_id"},
               /*authority = */      "me.robwilliams.pack.trip_items.contentprovider",
               /*basePath = */       "trip_items",
               /*allItemsId = */     130,

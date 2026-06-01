@@ -38,6 +38,14 @@
             android:name=".data.TripItemContentProvider"
             android:authorities="me.robwilliams.pack.trip_items.contentprovider" >
         </provider>
+        <provider
+            android:name=".data.BagContentProvider"
+            android:authorities="me.robwilliams.pack.bags.contentprovider" >
+        </provider>
+        <provider
+            android:name=".data.TripBagContentProvider"
+            android:authorities="me.robwilliams.pack.trip_bags.contentprovider" >
+        </provider>
 
         <activity
             android:name=".MainActivity"
