@@ -76,12 +76,17 @@ public class TripDetailActivity extends AppCompatActivity {
 
             // Now that we've loaded the Trip, load Trip Items
             SQLiteDatabase db = new DatabaseHelper(this).getReadableDatabase();
-            cursor = db.rawQuery("SELECT L.name as list_name, L.weight as list_weight, I._id as item_id, I.name as item_name, I.weight as item_weight, TI.status as status, LSL.listset_id as listset_id FROM trip T " +
+            cursor = db.rawQuery("SELECT L.name as list_name, L.weight as list_weight, " +
+                    "I._id as item_id, I.name as item_name, I.weight as item_weight, I.bag_hint_id, " +
+                    "TI.status as status, COALESCE(TI.quantity, 1) as quantity, TI.bag_id as bag_id, " +
+                    "B.name as bag_name, B.color as bag_color, " +
+                    "LSL.listset_id as listset_id FROM trip T " +
                     "INNER JOIN trip_listset TLS ON T._id=TLS.trip_id AND TLS.trip_id=" + tripId + " " +
                     "INNER JOIN listset_list LSL ON LSL.listset_id=TLS.listset_id " +
                     "INNER JOIN list L ON L._id=LSL.list_id " +
                     "INNER JOIN item I ON I.list_id=LSL.list_id " +
                     "LEFT JOIN trip_item TI ON TI.trip_id=TLS.trip_id AND TI.item_id=I._id " +
+                    "LEFT JOIN bag B ON B._id=TI.bag_id " +
                     "ORDER BY list_weight DESC, list_name ASC, item_weight DESC, item_name ASC", null);
 
             if (cursor != null) {
@@ -93,10 +98,18 @@ public class TripDetailActivity extends AppCompatActivity {
                     int listsetId = cursor.getInt(cursor.getColumnIndexOrThrow("listset_id"));
                     String itemName = cursor.getString(cursor.getColumnIndexOrThrow("item_name"));
                     int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                    int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+                    int bagId = cursor.isNull(cursor.getColumnIndexOrThrow("bag_id")) ? 0 :
+                            cursor.getInt(cursor.getColumnIndexOrThrow("bag_id"));
+                    String bagName = cursor.getString(cursor.getColumnIndexOrThrow("bag_name"));
+                    String bagColor = cursor.getString(cursor.getColumnIndexOrThrow("bag_color"));
+                    int bagHintId = cursor.isNull(cursor.getColumnIndexOrThrow("bag_hint_id")) ? 0 :
+                            cursor.getInt(cursor.getColumnIndexOrThrow("bag_hint_id"));
                     if (status > maximumStatus) {
                         maximumStatus = status;
                     }
-                    tripItems.add(new TripItem(itemId, listsetId, listName, itemName, status));
+                    tripItems.add(new TripItem(itemId, listsetId, listName, itemName, status,
+                            quantity, bagId, bagName, bagColor, bagHintId));
                 }
 
                 // And now with the Trip Items, finish setting up UI
@@ -153,12 +166,8 @@ public class TripDetailActivity extends AppCompatActivity {
                     long tripId = Long.parseLong(tripUri.getLastPathSegment());
                     // Iterate through existing Trip's items to figure out Sets and Items we want
                     Set<Integer> setIds = new HashSet<>();
-                    Set<Integer> itemIds = new HashSet<>();
                     for (TripItem tripItem : tripItems) {
                         setIds.add(tripItem.getListsetId());
-                        if (tripItem.getStatus() >= AbstractPackingFragment.STATUS_SHOULD_PACK) {
-                            itemIds.add(tripItem.getItemId());
-                        }
                     }
                     // Next setup the join table relationship between new Trip and original Trip's sets
                     for (int listsetId : setIds) {
@@ -168,12 +177,15 @@ public class TripDetailActivity extends AppCompatActivity {
                         getContentResolver().insert(TripSetContentProvider.CONTENT_URI, values);
                     }
                     // Finally setup the Trip Item join table with a status of SHOULD_PACK
-                    for (int itemId : itemIds) {
-                        values = new ContentValues();
-                        values.put("trip_id", tripId);
-                        values.put("item_id", itemId);
-                        values.put("status", AbstractPackingFragment.STATUS_SHOULD_PACK);
-                        getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
+                    for (TripItem ti : tripItems) {
+                        if (ti.getStatus() >= AbstractPackingFragment.STATUS_SHOULD_PACK) {
+                            values = new ContentValues();
+                            values.put("trip_id", tripId);
+                            values.put("item_id", ti.getItemId());
+                            values.put("status", AbstractPackingFragment.STATUS_SHOULD_PACK);
+                            values.put("quantity", ti.getQuantity());
+                            getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
+                        }
                     }
                     // Then transition to the new Trip
                     Intent i = new Intent(that, TripDetailActivity.class);

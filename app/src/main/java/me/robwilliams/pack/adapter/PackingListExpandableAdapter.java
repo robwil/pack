@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.robwilliams.pack.QuantityDialogHelper;
 import me.robwilliams.pack.R;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
@@ -114,7 +115,11 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
         final TextView textView = (TextView) itemLayout.getChildAt(0);
         final ImageView checkBox = (ImageView) itemLayout.getChildAt(1);
 
-        textView.setText(tripItem.getItemName());
+        String displayText = tripItem.getItemName();
+        if (tripItem.getQuantity() > 1) {
+            displayText += " x" + tripItem.getQuantity();
+        }
+        textView.setText(displayText);
 
         // Set checkbox state immediately without any animation
         boolean isChecked = tripItem.getStatus() >= currentPageStatus;
@@ -158,6 +163,34 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
                         listener.onDataChanged();
                     }
                 }
+            }
+        });
+
+        itemLayout.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                final int itemId = tripItem.getItemId();
+                QuantityDialogHelper.show(context, tripItem.getItemName(), tripItem.getQuantity(),
+                        new QuantityDialogHelper.OnQuantitySetListener() {
+                            @Override
+                            public void onQuantitySet(int quantity) {
+                                tripItemMap.get(itemId).setQuantity(quantity);
+                                ContentValues values = new ContentValues();
+                                values.put("quantity", quantity);
+                                if (tripItemMap.get(itemId).getStatus() == 0) {
+                                    values.put("item_id", itemId);
+                                    values.put("trip_id", tripId);
+                                    values.put("status", AbstractPackingFragment.STATUS_SHOULD_PACK);
+                                    tripItemMap.get(itemId).setStatus(AbstractPackingFragment.STATUS_SHOULD_PACK);
+                                    context.getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
+                                } else {
+                                    context.getContentResolver().update(TripItemContentProvider.CONTENT_URI, values,
+                                            "item_id=" + itemId + " AND trip_id=" + tripId, null);
+                                }
+                                notifyDataSetChanged();
+                            }
+                        });
+                return true;
             }
         });
 
