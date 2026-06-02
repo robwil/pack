@@ -169,7 +169,8 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
                         && currentPageStatus >= AbstractPackingFragment.STATUS_PACKED;
 
                 if (needsBagSelection) {
-                    int preselectedBagId = tripItem.getBagHintId() > 0 ? tripItem.getBagHintId()
+                    int preselectedBagId = tripItem.getBagId() > 0 ? tripItem.getBagId()
+                            : tripItem.getBagHintId() > 0 ? tripItem.getBagHintId()
                             : lastSelectedBagId > 0 ? lastSelectedBagId
                             : 0;
                     BagPickerDialogHelper.show(context, tripItem.getItemName(), tripBags, preselectedBagId,
@@ -237,7 +238,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
         values.put("status", newItemStatus);
         if (bagId > 0) {
             values.put("bag_id", bagId);
-        } else if (!newCheckedState) {
+        } else if (!newCheckedState && currentPageStatus == AbstractPackingFragment.STATUS_PACKED) {
             values.putNull("bag_id");
         }
 
@@ -257,7 +258,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
             tripItemMap.get(itemId).setBagId(bagId);
             tripItemMap.get(itemId).setBagName(bagName);
             tripItemMap.get(itemId).setBagColor(bagColor);
-        } else if (!newCheckedState) {
+        } else if (!newCheckedState && currentPageStatus == AbstractPackingFragment.STATUS_PACKED) {
             tripItemMap.get(itemId).setBagId(0);
             tripItemMap.get(itemId).setBagName(null);
             tripItemMap.get(itemId).setBagColor(null);

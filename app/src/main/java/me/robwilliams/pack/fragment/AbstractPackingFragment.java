@@ -46,6 +46,7 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
     protected HashMap<String, List<TripItem>> groupedTripItems;
     protected List<String> listNames;
     protected Set<String> expandedGroups; // Track which groups are expanded
+    protected boolean hasUserCollapsed = false;
     protected ArrayList<Bag> tripBags;
 
     public final static int STATUS_SHOULD_PACK = 1;
@@ -153,9 +154,6 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
             return;
         }
 
-        // Save current expansion states before rebuilding
-        saveExpansionStates();
-
         groupItemsByList();
 
         expandableListAdapter = new PackingListExpandableAdapter(
@@ -171,31 +169,46 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
         expandableListView.setAdapter(expandableListAdapter);
         expandableListAdapter.setOnDataChangeListener(this);
 
-        // Restore expansion states instead of expanding all groups
+        // Track user-initiated collapse/expand
+        expandableListView.setOnGroupCollapseListener(new ExpandableListView.OnGroupCollapseListener() {
+            @Override
+            public void onGroupCollapse(int groupPosition) {
+                hasUserCollapsed = true;
+                if (listNames != null && groupPosition < listNames.size()) {
+                    expandedGroups.remove(listNames.get(groupPosition));
+                }
+            }
+        });
+        expandableListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
+            @Override
+            public void onGroupExpand(int groupPosition) {
+                if (listNames != null && groupPosition < listNames.size()) {
+                    expandedGroups.add(listNames.get(groupPosition));
+                }
+            }
+        });
+
         restoreExpansionStates();
     }
 
-    private void saveExpansionStates() {
-        if (expandableListView != null && expandableListAdapter != null && listNames != null) {
-            expandedGroups.clear();
-            for (int i = 0; i < listNames.size(); i++) {
-                if (expandableListView.isGroupExpanded(i)) {
-                    expandedGroups.add(listNames.get(i));
-                }
-            }
-        }
-    }
-
     private void restoreExpansionStates() {
-        if (listNames == null) {
+        if (listNames == null || expandableListView == null) {
             return;
         }
 
-        // Handle first-time setup separately from restoration
-        if (expandedGroups.isEmpty()) {
-            performInitialExpansionSetup();
+        if (!hasUserCollapsed && expandedGroups.isEmpty()) {
+            // First time: expand all groups, deferred to after layout
+            expandableListView.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (expandableListView != null && listNames != null) {
+                        for (int i = 0; i < listNames.size(); i++) {
+                            expandableListView.expandGroup(i);
+                        }
+                    }
+                }
+            });
         } else {
-            // Restore previously saved expansion states
             for (int i = 0; i < listNames.size(); i++) {
                 String groupName = listNames.get(i);
                 if (expandedGroups.contains(groupName)) {
@@ -203,26 +216,6 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
                 }
             }
         }
-    }
-
-    private void performInitialExpansionSetup() {
-        // Define initial expansion behavior for first-time setup
-        // Current behavior: expand all groups for better discoverability
-        for (int i = 0; i < listNames.size(); i++) {
-            expandableListView.expandGroup(i);
-            expandedGroups.add(listNames.get(i));
-        }
-
-        // Alternative behaviors (commented out):
-        //
-        // Expand only first group:
-        // if (!listNames.isEmpty()) {
-        //     expandableListView.expandGroup(0);
-        //     expandedGroups.add(listNames.get(0));
-        // }
-        //
-        // Expand no groups (all collapsed):
-        // (don't expand anything, leave expandedGroups empty)
     }
 
     private void groupItemsByList() {
