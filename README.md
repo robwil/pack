@@ -20,3 +20,29 @@ keytool -printcert -jarfile app.apk
 3. Update `app/src/{debug,release}/res/values/google_oauth_config.xml` with the debug and release client IDs respectively
 
 This way, debug builds use debug OAuth and release builds use release OAuth automatically.
+
+## Building
+
+```bash
+./gradlew assembleDebug
+```
+
+## Running tests
+
+Instrumentation tests require a running emulator or connected device.
+
+```bash
+# Run all instrumented tests via Gradle
+./gradlew connectedDebugAndroidTest
+
+# Or install and run via adb directly (useful if Gradle runner has issues)
+./gradlew assembleDebug assembleDebugAndroidTest
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+adb shell am instrument -w me.robwilliams.pack.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+To run a specific test class:
+```bash
+adb shell am instrument -w -e class me.robwilliams.pack.data.DatabaseMigrationTest me.robwilliams.pack.test/androidx.test.runner.AndroidJUnitRunner
+```
