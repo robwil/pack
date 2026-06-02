@@ -215,6 +215,10 @@ public class BagManagementActivity extends AppCompatActivity
                         Toast.makeText(this, "Name is required", Toast.LENGTH_SHORT).show();
                         return;
                     }
+                    if (isBagNameTaken(name, bagId)) {
+                        Toast.makeText(this, "A bag named \"" + name + "\" already exists", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     ContentValues values = new ContentValues();
                     values.put("name", name);
                     values.put("color", selectedColor[0]);
@@ -230,6 +234,21 @@ public class BagManagementActivity extends AppCompatActivity
                 .setNegativeButton("Cancel", null);
 
         builder.show();
+    }
+
+    private boolean isBagNameTaken(String name, long excludeBagId) {
+        Cursor cursor = getContentResolver().query(BagContentProvider.CONTENT_URI,
+                new String[]{"_id"}, "name=?", new String[]{name}, null);
+        if (cursor == null) return false;
+        boolean taken = false;
+        while (cursor.moveToNext()) {
+            if (cursor.getLong(0) != excludeBagId) {
+                taken = true;
+                break;
+            }
+        }
+        cursor.close();
+        return taken;
     }
 
     private void showDeleteBagDialog(long bagId, String name) {
