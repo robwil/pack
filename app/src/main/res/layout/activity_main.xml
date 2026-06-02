@@ -39,9 +39,9 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Trips"
-        android:id="@+id/tripsButton"
-        android:onClick="openTripsActivity" />
+        android:text="Bags"
+        android:id="@+id/bagsButton"
+        android:onClick="openBagsActivity" />
 
     <View
         android:layout_width="1dp"
@@ -51,9 +51,9 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Bags"
-        android:id="@+id/bagsButton"
-        android:onClick="openBagsActivity" />
+        android:text="Trips"
+        android:id="@+id/tripsButton"
+        android:onClick="openTripsActivity" />
 
     <View
         android:layout_width="1dp"

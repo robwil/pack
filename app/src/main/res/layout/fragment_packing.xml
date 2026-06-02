@@ -1,14 +1,40 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" tools:context="me.robwilliams.pack.fragment.ShouldPackFragment">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="me.robwilliams.pack.fragment.ShouldPackFragment">
+
+    <HorizontalScrollView
+        android:id="@+id/bag_legend_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:requiresFadingEdge="horizontal"
+        android:fadingEdgeLength="24dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/bag_legend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="6dp"
+            android:background="#FFF5F5F5" />
+
+    </HorizontalScrollView>
 
     <ExpandableListView
         android:id="@+id/expandable_list_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:groupIndicator="@null"
         android:childDivider="@android:color/transparent"
         android:divider="@android:color/transparent"
         android:dividerHeight="2dp" />
 
-</FrameLayout>
+</LinearLayout>

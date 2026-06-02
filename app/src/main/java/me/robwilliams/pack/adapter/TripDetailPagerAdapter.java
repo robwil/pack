@@ -3,7 +3,7 @@ package me.robwilliams.pack.adapter;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentStatePagerAdapter;
 
 import java.util.ArrayList;
 
@@ -13,7 +13,7 @@ import me.robwilliams.pack.fragment.PackFragment;
 import me.robwilliams.pack.fragment.RepackFragment;
 import me.robwilliams.pack.fragment.ShouldPackFragment;
 
-public class TripDetailPagerAdapter extends FragmentPagerAdapter {
+public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
 
     private String[] pageTitles = {"Should Pack", "Pack", "Repack"};
     private int tripId;
@@ -25,6 +25,11 @@ public class TripDetailPagerAdapter extends FragmentPagerAdapter {
         this.tripId = tripId;
         this.tripItems = tripItems;
         this.tripBags = tripBags;
+    }
+
+    public void updateTripBags(ArrayList<Bag> tripBags) {
+        this.tripBags = tripBags;
+        notifyDataSetChanged();
     }
 
     @Override

@@ -6,10 +6,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.ListView;
+import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -62,10 +63,8 @@ public class TripBagSelectionDialogHelper {
             cursor.close();
         }
 
-        String[] bagNames = new String[allBags.size()];
-        boolean[] checked = new boolean[allBags.size()];
+        final boolean[] checked = new boolean[allBags.size()];
         for (int i = 0; i < allBags.size(); i++) {
-            bagNames[i] = allBags.get(i).getName();
             checked[i] = activeBagIds.contains(allBags.get(i).getId());
         }
 
@@ -73,12 +72,60 @@ public class TripBagSelectionDialogHelper {
 
         float density = context.getResources().getDisplayMetrics().density;
         int dp12 = (int) (12 * density);
+        int dp8 = (int) (8 * density);
+        int dp16 = (int) (16 * density);
+        int dp48 = (int) (48 * density);
+
+        LinearLayout listLayout = new LinearLayout(context);
+        listLayout.setOrientation(LinearLayout.VERTICAL);
+        listLayout.setPadding(dp16, dp8, dp16, dp8);
+
+        for (int i = 0; i < allBags.size(); i++) {
+            final int index = i;
+            Bag bag = allBags.get(i);
+
+            LinearLayout row = new LinearLayout(context);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setMinimumHeight(dp48);
+            row.setPadding(0, dp8, 0, dp8);
+
+            CheckBox checkBox = new CheckBox(context);
+            checkBox.setChecked(checked[i]);
+            checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> checked[index] = isChecked);
+
+            View dot = new View(context);
+            LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp12 * 2, dp12 * 2);
+            dotParams.setMargins(dp8, 0, dp12, 0);
+            dot.setLayoutParams(dotParams);
+            GradientDrawable circle = new GradientDrawable();
+            circle.setShape(GradientDrawable.OVAL);
+            try {
+                circle.setColor(Color.parseColor(bag.getColor()));
+            } catch (Exception e) {
+                circle.setColor(Color.GRAY);
+            }
+            dot.setBackground(circle);
+
+            TextView nameView = new TextView(context);
+            nameView.setText(bag.getName());
+            nameView.setTextSize(16);
+
+            row.addView(checkBox);
+            row.addView(dot);
+            row.addView(nameView);
+
+            row.setOnClickListener(v -> checkBox.toggle());
+
+            listLayout.addView(row);
+        }
+
+        ScrollView scrollView = new ScrollView(context);
+        scrollView.addView(listLayout);
 
         new AlertDialog.Builder(context)
                 .setTitle("Bags for this Trip")
-                .setMultiChoiceItems(bagNames, checked, (dialog, which, isChecked) -> {
-                    checked[which] = isChecked;
-                })
+                .setView(scrollView)
                 .setPositiveButton("OK", (dialog, which) -> {
                     applyBagChanges(context, tripId, allBags, originalChecked, checked);
                     List<Bag> newActiveBags = new ArrayList<>();

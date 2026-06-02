@@ -237,10 +237,7 @@ public class TripDetailActivity extends AppCompatActivity {
                     @Override
                     public void onBagsChanged(List<Bag> activeBags) {
                         tripBags = new ArrayList<>(activeBags);
-                        mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
-                        viewPager.setAdapter(mAdapter);
-                        PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
-                        tabs.setViewPager(viewPager);
+                        mAdapter.updateTripBags(tripBags);
                     }
                 });
     }

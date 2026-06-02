@@ -1,14 +1,18 @@
 package me.robwilliams.pack.fragment;
 
 import android.content.ContentValues;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckedTextView;
 import android.widget.ExpandableListView;
+import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -31,6 +35,8 @@ import me.robwilliams.pack.data.TripItemContentProvider;
 abstract public class AbstractPackingFragment extends Fragment implements PackingListExpandableAdapter.OnDataChangeListener {
     protected ExpandableListView expandableListView;
     protected PackingListExpandableAdapter expandableListAdapter;
+    protected HorizontalScrollView bagLegendScroll;
+    protected LinearLayout bagLegendContainer;
     protected int checkMarkDrawableResId;
 
     protected int tripId;
@@ -52,6 +58,8 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_packing, container, false);
         expandableListView = (ExpandableListView) rootView.findViewById(R.id.expandable_list_view);
+        bagLegendScroll = (HorizontalScrollView) rootView.findViewById(R.id.bag_legend_scroll);
+        bagLegendContainer = (LinearLayout) rootView.findViewById(R.id.bag_legend);
 
         // Look up resource id for built-in Android checkmark icon
         TypedValue value = new TypedValue();
@@ -75,8 +83,58 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
         expandedGroups = new HashSet<>();
 
         populateView();
+        populateBagLegend();
 
         return rootView;
+    }
+
+    protected void populateBagLegend() {
+        if (bagLegendScroll == null || bagLegendContainer == null) return;
+
+        if (tripBags == null || tripBags.isEmpty()) {
+            bagLegendScroll.setVisibility(View.GONE);
+            return;
+        }
+
+        bagLegendScroll.setVisibility(View.VISIBLE);
+        bagLegendContainer.removeAllViews();
+
+        float density = getResources().getDisplayMetrics().density;
+        int chipSize = (int) (10 * density);
+        int dp4 = (int) (4 * density);
+        int dp8 = (int) (8 * density);
+
+        for (Bag bag : tripBags) {
+            LinearLayout entry = new LinearLayout(getActivity());
+            entry.setOrientation(LinearLayout.HORIZONTAL);
+            entry.setGravity(Gravity.CENTER_VERTICAL);
+            LinearLayout.LayoutParams entryParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            entryParams.setMargins(0, 0, dp8 * 2, 0);
+            entry.setLayoutParams(entryParams);
+
+            View dot = new View(getActivity());
+            LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(chipSize, chipSize);
+            dotParams.setMargins(0, 0, dp4, 0);
+            dot.setLayoutParams(dotParams);
+            GradientDrawable circle = new GradientDrawable();
+            circle.setShape(GradientDrawable.OVAL);
+            try {
+                circle.setColor(Color.parseColor(bag.getColor()));
+            } catch (Exception e) {
+                circle.setColor(Color.GRAY);
+            }
+            dot.setBackground(circle);
+
+            TextView label = new TextView(getActivity());
+            label.setText(bag.getName());
+            label.setTextSize(12);
+            label.setTextColor(0xFF666666);
+
+            entry.addView(dot);
+            entry.addView(label);
+            bagLegendContainer.addView(entry);
+        }
     }
 
     protected void sortTripItems() {
