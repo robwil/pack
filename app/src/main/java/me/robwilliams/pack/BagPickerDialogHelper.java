@@ -10,6 +10,7 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import me.robwilliams.pack.data.Bag;
@@ -27,27 +28,28 @@ public class BagPickerDialogHelper {
             return;
         }
 
-        int preselectedIndex = -1;
-        for (int i = 0; i < tripBags.size(); i++) {
-            if (tripBags.get(i).getId() == preselectedBagId) {
-                preselectedIndex = i;
+        final List<Bag> orderedBags = new ArrayList<>(tripBags);
+        for (int i = 0; i < orderedBags.size(); i++) {
+            if (orderedBags.get(i).getId() == preselectedBagId) {
+                Bag preselected = orderedBags.remove(i);
+                orderedBags.add(0, preselected);
                 break;
             }
         }
 
-        final int[] selectedIndex = {preselectedIndex >= 0 ? preselectedIndex : 0};
+        final int[] selectedIndex = {0};
 
         float density = context.getResources().getDisplayMetrics().density;
         int dp12 = (int) (12 * density);
         int dp8 = (int) (8 * density);
 
-        ArrayAdapter<Bag> adapter = new ArrayAdapter<Bag>(context, android.R.layout.simple_list_item_single_choice, tripBags) {
+        ArrayAdapter<Bag> adapter = new ArrayAdapter<Bag>(context, android.R.layout.simple_list_item_single_choice, orderedBags) {
             @Override
             public View getView(int position, View convertView, ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
                 if (view instanceof TextView) {
                     TextView tv = (TextView) view;
-                    Bag bag = tripBags.get(position);
+                    Bag bag = orderedBags.get(position);
                     GradientDrawable circle = new GradientDrawable();
                     circle.setShape(GradientDrawable.OVAL);
                     try {
@@ -69,8 +71,8 @@ public class BagPickerDialogHelper {
                     selectedIndex[0] = which;
                 })
                 .setPositiveButton("OK", (dialog, which) -> {
-                    if (selectedIndex[0] >= 0 && selectedIndex[0] < tripBags.size()) {
-                        listener.onBagSelected(tripBags.get(selectedIndex[0]));
+                    if (selectedIndex[0] >= 0 && selectedIndex[0] < orderedBags.size()) {
+                        listener.onBagSelected(orderedBags.get(selectedIndex[0]));
                     } else {
                         listener.onCancelled();
                     }
