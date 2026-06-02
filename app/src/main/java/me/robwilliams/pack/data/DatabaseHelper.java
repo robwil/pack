@@ -9,7 +9,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "pack";
 
     public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, 3);
     }
 
     @Override
@@ -20,7 +20,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE `list` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `name` TEXT NOT NULL," +
-                "  `weight` INTEGER NOT NULL DEFAULT '0'" +
+                "  `weight` INTEGER NOT NULL DEFAULT '0'," +
+                "  `default_bag_id` INTEGER," +
+                "  FOREIGN KEY(default_bag_id) REFERENCES bag(_id) ON DELETE SET NULL" +
+                ");");
+
+        db.execSQL("CREATE TABLE `bag` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `name` TEXT NOT NULL," +
+                "  `color` TEXT NOT NULL DEFAULT '#808080'" +
                 ");");
 
         db.execSQL("CREATE TABLE `item` (" +
@@ -28,7 +36,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  `list_id` INTEGER NOT NULL," +
                 "  `name` TEXT NOT NULL," +
                 "  `weight` INTEGER NOT NULL DEFAULT '0'," +
-                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                "  `bag_hint_id` INTEGER," +
+                "  FOREIGN KEY(list_id) REFERENCES list(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(bag_hint_id) REFERENCES bag(_id) ON DELETE SET NULL" +
                 ");");
 
         db.execSQL("CREATE TABLE `listset` (" +
@@ -64,28 +74,49 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  `trip_id` INTEGER NOT NULL," +
                 "  `item_id` TEXT NOT NULL," +
                 "  `status` INTEGER NOT NULL," +
+                "  `quantity` INTEGER NOT NULL DEFAULT 1," +
+                "  `bag_id` INTEGER," +
                 "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
-                "  FOREIGN KEY(item_id) REFERENCES item(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                "  FOREIGN KEY(item_id) REFERENCES item(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON DELETE SET NULL" +
+                ");");
+
+        db.execSQL("CREATE TABLE `trip_bag` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `trip_id` INTEGER NOT NULL," +
+                "  `bag_id` INTEGER NOT NULL," +
+                "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                 ");");
 
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // Only one version for now, so just implement it as a DROP / recreate.
-        db.execSQL("DROP TABLE IF EXISTS `list`;");
-        db.execSQL("DROP TABLE IF EXISTS `item`;");
-        db.execSQL("DROP TABLE IF EXISTS `set`;");
-        db.execSQL("DROP TABLE IF EXISTS `set_list`;");
-        db.execSQL("DROP TABLE IF EXISTS `trip`;");
-        db.execSQL("DROP TABLE IF EXISTS `trip_list`;");
-        db.execSQL("DROP TABLE IF EXISTS `trip_item`;");
-        onCreate(db);
+        if (oldVersion < 2) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `bag` (" +
+                    "  `_id` INTEGER PRIMARY KEY," +
+                    "  `name` TEXT NOT NULL," +
+                    "  `color` TEXT NOT NULL DEFAULT '#808080'" +
+                    ");");
+            db.execSQL("CREATE TABLE IF NOT EXISTS `trip_bag` (" +
+                    "  `_id` INTEGER PRIMARY KEY," +
+                    "  `trip_id` INTEGER NOT NULL," +
+                    "  `bag_id` INTEGER NOT NULL," +
+                    "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
+                    "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                    ");");
+            db.execSQL("ALTER TABLE item ADD COLUMN bag_hint_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+            db.execSQL("ALTER TABLE trip_item ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1");
+            db.execSQL("ALTER TABLE trip_item ADD COLUMN bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        }
     }
 
     @Override
     public void onOpen(SQLiteDatabase db) {
-        // Must turn on foreign keys every time DB is opened or the foreign keys won't be enforced
         db.execSQL("PRAGMA foreign_keys=ON");
     }
 }

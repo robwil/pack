@@ -10,7 +10,7 @@ public class ListContentProvider extends AbstractSqliteContentProvider {
 
     public ListContentProvider() {
         super(/*tableName = */      "list",
-              /*validColumns = */   new String[]{"_id","name", "weight"},
+              /*validColumns = */   new String[]{"_id", "name", "weight", "default_bag_id"},
               /*authority = */      "me.robwilliams.pack.lists.contentprovider",
               /*basePath = */       "lists",
               /*allItemsId = */     10,

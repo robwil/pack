@@ -38,6 +38,14 @@
             android:name=".data.TripItemContentProvider"
             android:authorities="me.robwilliams.pack.trip_items.contentprovider" >
         </provider>
+        <provider
+            android:name=".data.BagContentProvider"
+            android:authorities="me.robwilliams.pack.bags.contentprovider" >
+        </provider>
+        <provider
+            android:name=".data.TripBagContentProvider"
+            android:authorities="me.robwilliams.pack.trip_bags.contentprovider" >
+        </provider>
 
         <activity
             android:name=".MainActivity"
@@ -88,6 +96,14 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="me.robwilliams.pack.SetOverviewActivity" />
+        </activity>
+        <activity
+            android:name=".BagManagementActivity"
+            android:label="@string/title_activity_bag_management"
+            android:parentActivityName=".MainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="me.robwilliams.pack.MainActivity" />
         </activity>
         <activity
             android:name=".TripOverviewActivity"

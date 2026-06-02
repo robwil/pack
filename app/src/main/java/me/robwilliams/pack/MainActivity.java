@@ -37,6 +37,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().hide();
+        }
 
         driveService = new GoogleDriveService(this);
         setupActivityResultLaunchers();
@@ -106,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void openTripsActivity(View view) {
         Intent intent = new Intent(this, TripOverviewActivity.class);
+        startActivity(intent);
+    }
+
+    public void openBagsActivity(View view) {
+        Intent intent = new Intent(this, BagManagementActivity.class);
         startActivity(intent);
     }
 

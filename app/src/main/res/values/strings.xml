@@ -40,10 +40,18 @@
     <string name="title_activity_trip_detail">Trip Detail</string>
     <string name="action_copy_trip">Copy Trip</string>
     <string name="action_delete_trip">Delete Trip</string>
+    <string name="action_manage_trip_bags">Bags</string>
+
+    <!-- Strings for Bag Management Activity -->
+    <string name="title_activity_bag_management">Bags</string>
+    <string name="action_add_bag">Add Bag</string>
+    <string name="no_bags">No bags defined yet. Add one to start tracking which bag items go in.</string>
 
     <!-- Shared Strings used throughout application -->
     <string name="label_name">Name</string>
     <string name="label_weight">Weight</string>
+    <string name="label_default_bag">Default Bag</string>
+    <string name="set_default_bag">Set Default Bag</string>
 
     <!-- Google Drive API Configuration is in build variant specific files:
          app/src/debug/res/values/google_oauth_config.xml

@@ -9,7 +9,7 @@ public class ItemContentProvider extends AbstractSqliteContentProvider {
 
     public ItemContentProvider() {
         super(/*tableName = */      "item",
-              /*validColumns = */   new String[]{"_id", "list_id", "name", "weight"},
+              /*validColumns = */   new String[]{"_id", "list_id", "name", "weight", "bag_hint_id"},
               /*authority = */      "me.robwilliams.pack.list_items.contentprovider",
               /*basePath = */       "items",
               /*allItemsId = */     30,
