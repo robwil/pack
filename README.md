@@ -31,11 +31,9 @@ This way, debug builds use debug OAuth and release builds use release OAuth auto
 
 Instrumentation tests require a running emulator or connected device.
 
-```bash
-# Run all instrumented tests via Gradle
-./gradlew connectedDebugAndroidTest
+**Important:** Do not use `./gradlew connectedDebugAndroidTest` — it uninstalls and reinstalls the app, wiping the database on the emulator. Use adb directly instead:
 
-# Or install and run via adb directly (useful if Gradle runner has issues)
+```bash
 ./gradlew assembleDebug assembleDebugAndroidTest
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
