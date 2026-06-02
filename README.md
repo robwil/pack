@@ -29,7 +29,17 @@ This way, debug builds use debug OAuth and release builds use release OAuth auto
 
 ## Running tests
 
-Instrumentation tests require a running emulator or connected device.
+### Unit tests
+
+No emulator required:
+
+```bash
+./gradlew testDebugUnitTest
+```
+
+### Instrumented tests
+
+Requires a running emulator or connected device.
 
 **Important:** Do not use `./gradlew connectedDebugAndroidTest` — it uninstalls and reinstalls the app, wiping the database on the emulator. Use adb directly instead:
 
