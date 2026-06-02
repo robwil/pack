@@ -21,8 +21,6 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
@@ -270,20 +268,20 @@ public class ListDetailActivity extends AppCompatActivity
         description.setPadding(0, 0, 0, dp16);
         layout.addView(description);
 
-        RadioGroup radioGroup = new RadioGroup(this);
-        radioGroup.setOrientation(RadioGroup.VERTICAL);
+        final int[] selectedIndex = {-1};
 
+        LinearLayout bagList = new LinearLayout(this);
+        bagList.setOrientation(LinearLayout.VERTICAL);
+
+        final List<View> dotViews = new ArrayList<>();
         for (int i = 0; i < bags.size(); i++) {
+            final int index = i;
             Bag bag = bags.get(i);
 
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(0, dp8, 0, dp8);
-
-            RadioButton radio = new RadioButton(this);
-            radio.setId(View.generateViewId());
-            radio.setText("");
+            row.setPadding(dp8, dp12, dp8, dp12);
 
             View dot = new View(this);
             LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp12 * 2, dp12 * 2);
@@ -297,22 +295,38 @@ public class ListDetailActivity extends AppCompatActivity
                 circle.setColor(Color.GRAY);
             }
             dot.setBackground(circle);
+            dotViews.add(dot);
 
             TextView nameView = new TextView(this);
             nameView.setText(bag.getName());
             nameView.setTextSize(16);
 
-            row.addView(radio);
             row.addView(dot);
             row.addView(nameView);
 
-            final int radioId = radio.getId();
-            row.setOnClickListener(v -> radioGroup.check(radioId));
+            row.setOnClickListener(v -> {
+                selectedIndex[0] = index;
+                for (int j = 0; j < dotViews.size(); j++) {
+                    View d = dotViews.get(j);
+                    GradientDrawable bg = new GradientDrawable();
+                    bg.setShape(GradientDrawable.OVAL);
+                    try {
+                        bg.setColor(Color.parseColor(bags.get(j).getColor()));
+                    } catch (Exception e) {
+                        bg.setColor(Color.GRAY);
+                    }
+                    if (j == index) {
+                        float dens = getResources().getDisplayMetrics().density;
+                        bg.setStroke((int)(3 * dens), Color.BLACK);
+                    }
+                    d.setBackground(bg);
+                }
+            });
 
-            radioGroup.addView(row);
+            bagList.addView(row);
         }
 
-        layout.addView(radioGroup);
+        layout.addView(bagList);
 
         ScrollView scrollView = new ScrollView(this);
         scrollView.addView(layout);
@@ -322,21 +336,8 @@ public class ListDetailActivity extends AppCompatActivity
                 .setTitle("Set Default Bag")
                 .setView(scrollView)
                 .setPositiveButton("Apply", (dialog, which) -> {
-                    int checkedId = radioGroup.getCheckedRadioButtonId();
-                    if (checkedId == -1) return;
-
-                    int selectedIndex = -1;
-                    for (int i = 0; i < radioGroup.getChildCount(); i++) {
-                        LinearLayout row = (LinearLayout) radioGroup.getChildAt(i);
-                        RadioButton radio = (RadioButton) row.getChildAt(0);
-                        if (radio.getId() == checkedId) {
-                            selectedIndex = i;
-                            break;
-                        }
-                    }
-                    if (selectedIndex < 0 || selectedIndex >= finalBags.size()) return;
-
-                    Bag selectedBag = finalBags.get(selectedIndex);
+                    if (selectedIndex[0] < 0 || selectedIndex[0] >= finalBags.size()) return;
+                    Bag selectedBag = finalBags.get(selectedIndex[0]);
                     applyDefaultBag(selectedBag);
                 })
                 .setNegativeButton("Cancel", null)

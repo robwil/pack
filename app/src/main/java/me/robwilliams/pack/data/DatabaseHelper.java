@@ -9,7 +9,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "pack";
 
     public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 2);
+        super(context, DATABASE_NAME, null, 3);
     }
 
     @Override
@@ -106,10 +106,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
                     "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                     ");");
-            db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
             db.execSQL("ALTER TABLE item ADD COLUMN bag_hint_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
             db.execSQL("ALTER TABLE trip_item ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1");
             db.execSQL("ALTER TABLE trip_item ADD COLUMN bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        }
+        if (oldVersion < 3) {
+            db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
         }
     }
 
