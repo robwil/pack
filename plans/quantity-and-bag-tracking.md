@@ -159,13 +159,51 @@ The Pack app is a native Android (Java) packing list manager with SQLite/Content
 | `res/layout/activity_bag_management.xml` | Bag management layout |
 | `res/drawable/ic_bag.xml` | Bag icon vector drawable |
 
+Note: `ic_bag.xml` was not created — the "Bags" menu item uses text only (`ifRoom` shows title). A vector drawable could be added later for a cleaner toolbar.
+
 ---
 
 ## Verification
-1. Build and install on device/emulator
-2. Test quantity: long-press item -> set quantity -> verify display, verify persistence across tab switches
-3. Test bags: create bags globally -> assign to trip -> pack item -> verify bag picker appears -> verify chip shows
-4. Test repack: verify bag pre-selects the pack-phase bag
-5. Test bag hint: set hint on item -> pack in trip with that bag active -> verify pre-selection
-6. Test edge cases: remove bag from trip, delete bag globally, copy trip with bags
-7. Test migration: install old version, add data, upgrade to new version, verify data intact
+1. ✅ Build and install on device/emulator
+2. ✅ Test quantity: long-press item -> set quantity -> verify display, verify persistence across tab switches
+3. ✅ Test bags: create bags globally -> assign to trip -> pack item -> verify bag picker appears -> verify chip shows
+4. ✅ Test repack: verify bag pre-selects the pack-phase bag
+5. ✅ Test bag hint: set hint on item -> pack in trip with that bag active -> verify pre-selection
+6. ✅ Test edge cases: remove bag from trip, delete bag globally, copy trip with bags
+7. ✅ Test migration: install old version, add data, upgrade to new version, verify data intact
+
+---
+
+## Implementation Notes & Follow-ups
+
+### Ambiguities / Decisions Made
+- **Bag menu in toolbar**: Used text-only "Bags" menu item (showAsAction=ifRoom) rather than an icon since no vector drawable was created. Could add `ic_bag.xml` later for a cleaner look.
+  - Fine as is
+- **Quantity on unpacked items**: Setting quantity on an item with status 0 auto-marks it as SHOULD_PACK (since trip_item row must exist to store quantity). This seemed like the right UX — if you're setting a quantity you intend to pack it.
+  - Yep definitely this is great, lets you long-press for everything you want quantity for.
+- **Bag chip**: Shows a 12dp colored circle between item name and checkbox. No bag name text to keep rows compact. Tooltip or long-press could show bag name in the future.
+  - Added legend to solve for this 
+- **Bag removal from trip**: When unchecking a bag in the trip bag selection dialog, all trip_item.bag_id values for that bag are nulled. Items stay packed, just lose their bag assignment. No confirmation dialog — done silently since user explicitly unchecked it.
+  - Fine as is
+- **Repack bag pre-selection**: Uses the already-assigned bag_id from the pack phase. Falls back to bag_hint_id if no bag was assigned.
+  - Makes sense.
+- **Should Pack tab**: Bag picker is NOT shown on Should Pack since it's just marking items to pack, not actually packing them. Bags only asked during Pack and Repack actions.
+  - Makes sense.
+
+### Potential Follow-ups
+- Add a vector drawable icon for the Bags toolbar menu item
+  - No need, but we added nice tiles to landing page
+- Consider showing bag name on long-press of the bag chip
+  - No need, added always visible legend
+- The bag hint spinner on item edit screen loads bags synchronously — for very large bag lists this could be slow (unlikely in practice)
+  - Seems fine
+- No uniqueness constraint on bag names — user could create duplicate-named bags
+  - Fixed
+- The quantity quick-add buttons are global (SharedPreferences), not per-trip or per-list
+  - Makes sense
+- Consider adding a "clear all bag assignments" option when removing bags from a trip
+  - No need
+- The bag color picker uses a fixed grid of 12 colors — could be expanded or support custom hex input
+  - No need, gave nice pastels
+- There is no way to delete a bag
+  - Fine for now
