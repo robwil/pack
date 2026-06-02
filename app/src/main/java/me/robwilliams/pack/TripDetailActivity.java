@@ -237,6 +237,17 @@ public class TripDetailActivity extends AppCompatActivity {
                     @Override
                     public void onBagsChanged(List<Bag> activeBags) {
                         tripBags = new ArrayList<>(activeBags);
+                        Set<Integer> activeBagIds = new HashSet<>();
+                        for (Bag bag : activeBags) {
+                            activeBagIds.add(bag.getId());
+                        }
+                        for (TripItem ti : tripItems) {
+                            if (ti.getBagId() > 0 && !activeBagIds.contains(ti.getBagId())) {
+                                ti.setBagId(0);
+                                ti.setBagName(null);
+                                ti.setBagColor(null);
+                            }
+                        }
                         mAdapter.updateTripBags(tripBags);
                     }
                 });
