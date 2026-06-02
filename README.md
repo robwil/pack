@@ -1,5 +1,9 @@
 Simple Android app for managing Packing Lists and Trips which use them. For more information check out the blog post here: robwilliams.me/2015/07/pack-android-packing-list-app/
 
+<p align="center">
+  <img src="docs/screenshot-home.png" alt="Pack home screen" width="300" />
+</p>
+
 # Developer notes
 
 ## OAuth setup
