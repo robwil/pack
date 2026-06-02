@@ -42,6 +42,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
     private int checkMarkDrawableResId;
     private WeakReference<OnDataChangeListener> dataChangeListenerRef;
     private List<Bag> tripBags;
+    private int lastSelectedBagId = 0;
 
     public PackingListExpandableAdapter(Context context, List<String> listNames,
                                         HashMap<String, List<TripItem>> listItems,
@@ -168,11 +169,14 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
                         && currentPageStatus >= AbstractPackingFragment.STATUS_PACKED;
 
                 if (needsBagSelection) {
-                    int preselectedBagId = tripItem.getBagId() > 0 ? tripItem.getBagId() : tripItem.getBagHintId();
+                    int preselectedBagId = tripItem.getBagHintId() > 0 ? tripItem.getBagHintId()
+                            : lastSelectedBagId > 0 ? lastSelectedBagId
+                            : 0;
                     BagPickerDialogHelper.show(context, tripItem.getItemName(), tripBags, preselectedBagId,
                             new BagPickerDialogHelper.OnBagSelectedListener() {
                                 @Override
                                 public void onBagSelected(Bag bag) {
+                                    lastSelectedBagId = bag.getId();
                                     performStatusUpdate(tripItem, itemId, newItemStatus, currentItemStatus,
                                             bag.getId(), bag.getName(), bag.getColor(), checkBox);
                                 }
