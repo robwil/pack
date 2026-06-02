@@ -1,13 +1,17 @@
 package me.robwilliams.pack;
 
+import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
 import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.Menu;
@@ -15,11 +19,20 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import me.robwilliams.pack.data.Bag;
+import me.robwilliams.pack.data.BagContentProvider;
 import me.robwilliams.pack.data.ItemContentProvider;
 import me.robwilliams.pack.data.ListContentProvider;
 
@@ -140,6 +153,7 @@ public class ListDetailActivity extends AppCompatActivity
             mListItemsView.setVisibility(View.VISIBLE);
             mEmptyItemsView.setVisibility(View.VISIBLE);
             findViewById(R.id.delete).setVisibility(View.VISIBLE);
+            findViewById(R.id.set_default_bag).setVisibility(View.VISIBLE);
             findViewById(R.id.add_list_item).setVisibility(View.VISIBLE);
 
             getLoaderManager().initLoader(0, null, this);
@@ -215,5 +229,131 @@ public class ListDetailActivity extends AppCompatActivity
         Intent intent = new Intent(this, ListItemDetailActivity.class);
         intent.putExtra(ListContentProvider.CONTENT_ID_TYPE, listId);
         startActivity(intent);
+    }
+
+    public void showSetDefaultBagDialog(View view) {
+        List<Bag> bags = new ArrayList<>();
+        Cursor cursor = getContentResolver().query(BagContentProvider.CONTENT_URI,
+                new String[]{"_id", "name", "color"}, null, null, "name ASC");
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                bags.add(new Bag(
+                        cursor.getInt(cursor.getColumnIndexOrThrow("_id")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("name")),
+                        cursor.getString(cursor.getColumnIndexOrThrow("color"))
+                ));
+            }
+            cursor.close();
+        }
+
+        if (bags.isEmpty()) {
+            new AlertDialog.Builder(this)
+                    .setTitle("No Bags")
+                    .setMessage("No bags have been created yet. Create bags from the main screen first.")
+                    .setPositiveButton("OK", null)
+                    .show();
+            return;
+        }
+
+        float density = getResources().getDisplayMetrics().density;
+        int dp8 = (int) (8 * density);
+        int dp12 = (int) (12 * density);
+        int dp16 = (int) (16 * density);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp16, dp16, dp16, dp8);
+
+        TextView description = new TextView(this);
+        description.setText("Select a default bag for this list. All items without an existing bag assignment will be updated. Items that already have a different bag will not be changed.\n\nNew items added to this list will also use this bag.");
+        description.setTextSize(14);
+        description.setPadding(0, 0, 0, dp16);
+        layout.addView(description);
+
+        RadioGroup radioGroup = new RadioGroup(this);
+        radioGroup.setOrientation(RadioGroup.VERTICAL);
+
+        for (int i = 0; i < bags.size(); i++) {
+            Bag bag = bags.get(i);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, dp8, 0, dp8);
+
+            RadioButton radio = new RadioButton(this);
+            radio.setId(View.generateViewId());
+            radio.setText("");
+
+            View dot = new View(this);
+            LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(dp12 * 2, dp12 * 2);
+            dotParams.setMargins(0, 0, dp12, 0);
+            dot.setLayoutParams(dotParams);
+            GradientDrawable circle = new GradientDrawable();
+            circle.setShape(GradientDrawable.OVAL);
+            try {
+                circle.setColor(Color.parseColor(bag.getColor()));
+            } catch (Exception e) {
+                circle.setColor(Color.GRAY);
+            }
+            dot.setBackground(circle);
+
+            TextView nameView = new TextView(this);
+            nameView.setText(bag.getName());
+            nameView.setTextSize(16);
+
+            row.addView(radio);
+            row.addView(dot);
+            row.addView(nameView);
+
+            final int radioId = radio.getId();
+            row.setOnClickListener(v -> radioGroup.check(radioId));
+
+            radioGroup.addView(row);
+        }
+
+        layout.addView(radioGroup);
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(layout);
+
+        final List<Bag> finalBags = bags;
+        new AlertDialog.Builder(this)
+                .setTitle("Set Default Bag")
+                .setView(scrollView)
+                .setPositiveButton("Apply", (dialog, which) -> {
+                    int checkedId = radioGroup.getCheckedRadioButtonId();
+                    if (checkedId == -1) return;
+
+                    int selectedIndex = -1;
+                    for (int i = 0; i < radioGroup.getChildCount(); i++) {
+                        LinearLayout row = (LinearLayout) radioGroup.getChildAt(i);
+                        RadioButton radio = (RadioButton) row.getChildAt(0);
+                        if (radio.getId() == checkedId) {
+                            selectedIndex = i;
+                            break;
+                        }
+                    }
+                    if (selectedIndex < 0 || selectedIndex >= finalBags.size()) return;
+
+                    Bag selectedBag = finalBags.get(selectedIndex);
+                    applyDefaultBag(selectedBag);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void applyDefaultBag(Bag bag) {
+        ContentValues listValues = new ContentValues();
+        listValues.put("default_bag_id", bag.getId());
+        getContentResolver().update(listUri, listValues, null, null);
+
+        ContentValues itemValues = new ContentValues();
+        itemValues.put("bag_hint_id", bag.getId());
+        int updated = getContentResolver().update(ItemContentProvider.CONTENT_URI, itemValues,
+                "list_id=" + listId + " AND bag_hint_id IS NULL", null);
+
+        Toast.makeText(this, "Default bag set to \"" + bag.getName() + "\". " +
+                updated + " item(s) updated.", Toast.LENGTH_LONG).show();
     }
 }

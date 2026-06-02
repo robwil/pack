@@ -45,6 +45,14 @@
             android:onClick="deleteList"
             android:visibility="invisible" />
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/set_default_bag"
+            android:id="@+id/set_default_bag"
+            android:onClick="showSetDefaultBagDialog"
+            android:visibility="invisible" />
+
     </LinearLayout>
 
     <TextView

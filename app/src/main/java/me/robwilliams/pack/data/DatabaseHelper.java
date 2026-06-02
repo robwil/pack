@@ -20,7 +20,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE `list` (" +
                 "  `_id` INTEGER PRIMARY KEY," +
                 "  `name` TEXT NOT NULL," +
-                "  `weight` INTEGER NOT NULL DEFAULT '0'" +
+                "  `weight` INTEGER NOT NULL DEFAULT '0'," +
+                "  `default_bag_id` INTEGER," +
+                "  FOREIGN KEY(default_bag_id) REFERENCES bag(_id) ON DELETE SET NULL" +
                 ");");
 
         db.execSQL("CREATE TABLE `bag` (" +
@@ -104,6 +106,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE," +
                     "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                     ");");
+            db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
             db.execSQL("ALTER TABLE item ADD COLUMN bag_hint_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
             db.execSQL("ALTER TABLE trip_item ADD COLUMN quantity INTEGER NOT NULL DEFAULT 1");
             db.execSQL("ALTER TABLE trip_item ADD COLUMN bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");

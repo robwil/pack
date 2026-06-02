@@ -55,7 +55,26 @@ public class ListItemDetailActivity extends AppCompatActivity {
 
             if (listItemUri != null) {
                 fillData(listItemUri);
+            } else {
+                loadListDefaultBag();
             }
+        }
+    }
+
+    private void loadListDefaultBag() {
+        if (listId <= 0) return;
+        Uri listUri = Uri.parse(ListContentProvider.CONTENT_URI + "/" + listId);
+        Cursor cursor = getContentResolver().query(listUri,
+                new String[]{"_id", "default_bag_id"}, null, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int defaultBagId = cursor.isNull(cursor.getColumnIndexOrThrow("default_bag_id")) ? 0 :
+                        cursor.getInt(cursor.getColumnIndexOrThrow("default_bag_id"));
+                if (defaultBagId > 0) {
+                    selectBagInSpinner(defaultBagId);
+                }
+            }
+            cursor.close();
         }
     }
 
