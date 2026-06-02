@@ -32,9 +32,9 @@ public class BagManagementActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final String[] PRESET_COLORS = {
-            "#F44336", "#E91E63", "#9C27B0", "#2196F3",
-            "#00BCD4", "#009688", "#4CAF50", "#FF9800",
-            "#795548", "#9E9E9E", "#212121", "#FFEB3B"
+            "#EF9A9A", "#F48FB1", "#CE93D8", "#90CAF9",
+            "#80DEEA", "#80CBC4", "#A5D6A7", "#FFCC80",
+            "#BCAAA4", "#B0BEC5", "#78909C", "#FFD54F"
     };
 
     private SimpleCursorAdapter adapter;
