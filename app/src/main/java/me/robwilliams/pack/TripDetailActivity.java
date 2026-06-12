@@ -97,6 +97,8 @@ public class TripDetailActivity extends AppCompatActivity {
             if (cursor != null) {
                 // Loop through cursor and store items in a local repository
                 int maximumStatus = 0;
+                boolean allPacked = true;
+                boolean hasActiveItems = false;
                 while (cursor.moveToNext()) {
                     String listName = cursor.getString(cursor.getColumnIndexOrThrow("list_name"));
                     int itemId = cursor.getInt(cursor.getColumnIndexOrThrow("item_id"));
@@ -112,6 +114,12 @@ public class TripDetailActivity extends AppCompatActivity {
                             cursor.getInt(cursor.getColumnIndexOrThrow("bag_hint_id"));
                     if (status > maximumStatus) {
                         maximumStatus = status;
+                    }
+                    if (status >= AbstractPackingFragment.STATUS_SHOULD_PACK) {
+                        hasActiveItems = true;
+                        if (status < AbstractPackingFragment.STATUS_PACKED) {
+                            allPacked = false;
+                        }
                     }
                     tripItems.add(new TripItem(itemId, listsetId, listName, itemName, status,
                             quantity, bagId, bagName, bagColor, bagHintId));
@@ -156,9 +164,8 @@ public class TripDetailActivity extends AppCompatActivity {
                     public void onPageScrollStateChanged(int state) {}
                 });
 
-                // Set current tab based on maximum status in tripItems
-                // can just pass status value directly since first page is Should Pack, second page is Pack, etc.
-                viewPager.setCurrentItem(maximumStatus);
+                viewPager.setCurrentItem(
+                        BagSelectionLogic.resolveDefaultPage(maximumStatus, hasActiveItems, allPacked));
             }
         }
     }

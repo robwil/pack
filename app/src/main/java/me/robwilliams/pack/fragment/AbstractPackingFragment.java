@@ -1,5 +1,6 @@
 package me.robwilliams.pack.fragment;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
@@ -134,8 +135,61 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
 
             entry.addView(dot);
             entry.addView(label);
+
+            final Bag clickedBag = bag;
+            entry.setClickable(true);
+            entry.setFocusable(true);
+            TypedValue outValue = new TypedValue();
+            getActivity().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+            entry.setBackgroundResource(outValue.resourceId);
+            entry.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    showBagContentsDialog(clickedBag);
+                }
+            });
+
             bagLegendContainer.addView(entry);
         }
+    }
+
+    private void showBagContentsDialog(Bag bag) {
+        LinkedHashMap<String, List<String>> itemsByList = new LinkedHashMap<>();
+        for (TripItem ti : tripItems) {
+            if (ti.getBagId() == bag.getId() && ti.getStatus() >= getCurrentPageStatus() - 1) {
+                String display = ti.getItemName();
+                if (ti.getQuantity() > 1) {
+                    display += " x" + ti.getQuantity();
+                }
+                List<String> list = itemsByList.get(ti.getListName());
+                if (list == null) {
+                    list = new ArrayList<>();
+                    itemsByList.put(ti.getListName(), list);
+                }
+                list.add(display);
+            }
+        }
+
+        String message;
+        if (itemsByList.isEmpty()) {
+            message = "No items in this bag yet.";
+        } else {
+            StringBuilder sb = new StringBuilder();
+            for (Map.Entry<String, List<String>> entry : itemsByList.entrySet()) {
+                sb.append(entry.getKey()).append("\n");
+                for (String item : entry.getValue()) {
+                    sb.append("  • ").append(item).append("\n");
+                }
+                sb.append("\n");
+            }
+            message = sb.toString().trim();
+        }
+
+        new AlertDialog.Builder(getActivity())
+                .setTitle(bag.getName())
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     protected void sortTripItems() {
