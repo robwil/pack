@@ -70,4 +70,46 @@ public class BagSelectionLogicTest {
         int STATUS_SHOULD_PACK = 1;
         assertFalse(BagSelectionLogic.shouldClearBagOnUncheck(STATUS_SHOULD_PACK, STATUS_PACKED));
     }
+
+    // --- resolveDefaultPage ---
+
+    @Test
+    public void defaultPage_noItems() {
+        assertEquals(0, BagSelectionLogic.resolveDefaultPage(0, false, true));
+    }
+
+    @Test
+    public void defaultPage_shouldPackOnly() {
+        assertEquals(1, BagSelectionLogic.resolveDefaultPage(1, true, false));
+    }
+
+    @Test
+    public void defaultPage_somePackedNotAll() {
+        // Max status is PACKED(2) but not all items are packed -> stay on Pack tab
+        assertEquals(1, BagSelectionLogic.resolveDefaultPage(2, true, false));
+    }
+
+    @Test
+    public void defaultPage_allPacked() {
+        // All items are at least packed -> Repack tab
+        assertEquals(2, BagSelectionLogic.resolveDefaultPage(2, true, true));
+    }
+
+    @Test
+    public void defaultPage_someRepackedNotAllPacked() {
+        // Max status is REPACKED(3) but not all items are packed -> stay on Pack tab
+        assertEquals(1, BagSelectionLogic.resolveDefaultPage(3, true, false));
+    }
+
+    @Test
+    public void defaultPage_allPackedSomeRepacked() {
+        // All items are at least packed, some repacked -> Repack tab
+        assertEquals(2, BagSelectionLogic.resolveDefaultPage(3, true, true));
+    }
+
+    @Test
+    public void defaultPage_maxStatusCappedAtTwo() {
+        // Status 3 should still map to page 2 max
+        assertEquals(2, BagSelectionLogic.resolveDefaultPage(3, true, true));
+    }
 }

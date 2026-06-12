@@ -19,6 +19,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -27,10 +29,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import me.robwilliams.pack.data.Bag;
 import me.robwilliams.pack.data.BagContentProvider;
+import me.robwilliams.pack.data.DatabaseHelper;
 import me.robwilliams.pack.data.ItemContentProvider;
 import me.robwilliams.pack.data.ListContentProvider;
 
@@ -268,6 +273,14 @@ public class ListDetailActivity extends AppCompatActivity
         description.setPadding(0, 0, 0, dp16);
         layout.addView(description);
 
+        Button suggestButton = new Button(this);
+        suggestButton.setText("Suggest from Recent Trips");
+        LinearLayout.LayoutParams suggestParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        suggestParams.setMargins(0, 0, 0, dp16);
+        suggestButton.setLayoutParams(suggestParams);
+        layout.addView(suggestButton);
+
         final int[] selectedIndex = {-1};
 
         LinearLayout bagList = new LinearLayout(this);
@@ -332,7 +345,7 @@ public class ListDetailActivity extends AppCompatActivity
         scrollView.addView(layout);
 
         final List<Bag> finalBags = bags;
-        new AlertDialog.Builder(this)
+        final AlertDialog parentDialog = new AlertDialog.Builder(this)
                 .setTitle("Set Default Bag")
                 .setView(scrollView)
                 .setPositiveButton("Apply", (dialog, which) -> {
@@ -341,7 +354,9 @@ public class ListDetailActivity extends AppCompatActivity
                     applyDefaultBag(selectedBag);
                 })
                 .setNegativeButton("Cancel", null)
-                .show();
+                .create();
+        suggestButton.setOnClickListener(v -> showSuggestFromRecentTripsDialog(parentDialog));
+        parentDialog.show();
     }
 
     private void applyDefaultBag(Bag bag) {
@@ -356,5 +371,142 @@ public class ListDetailActivity extends AppCompatActivity
 
         Toast.makeText(this, "Default bag set to \"" + bag.getName() + "\". " +
                 updated + " item(s) updated.", Toast.LENGTH_LONG).show();
+    }
+
+    private void showSuggestFromRecentTripsDialog(final AlertDialog parentDialog) {
+        android.database.sqlite.SQLiteDatabase db = new DatabaseHelper(this).getReadableDatabase();
+
+        // Find the most recent trip that contains items from this list
+        Cursor tripCursor = db.rawQuery(
+                "SELECT T._id, T.name FROM trip T " +
+                "INNER JOIN trip_listset TLS ON T._id = TLS.trip_id " +
+                "INNER JOIN listset_list LSL ON LSL.listset_id = TLS.listset_id " +
+                "WHERE LSL.list_id = " + listId + " " +
+                "ORDER BY T.timestamp DESC LIMIT 1", null);
+        if (tripCursor == null || !tripCursor.moveToFirst()) {
+            if (tripCursor != null) tripCursor.close();
+            Toast.makeText(this, "No trips found using this list", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        int lastTripId = tripCursor.getInt(0);
+        String lastTripName = tripCursor.getString(1);
+        tripCursor.close();
+
+        // Get bag assignments for items in this list from that trip
+        Cursor itemCursor = db.rawQuery(
+                "SELECT I._id as item_id, I.name as item_name, I.bag_hint_id, " +
+                "TI.bag_id, B.name as bag_name, B.color as bag_color " +
+                "FROM item I " +
+                "INNER JOIN trip_item TI ON TI.item_id = I._id AND TI.trip_id = " + lastTripId + " " +
+                "INNER JOIN bag B ON B._id = TI.bag_id " +
+                "WHERE I.list_id = " + listId + " AND TI.bag_id IS NOT NULL " +
+                "ORDER BY I.name ASC", null);
+
+        if (itemCursor == null || !itemCursor.moveToFirst()) {
+            if (itemCursor != null) itemCursor.close();
+            Toast.makeText(this, "No bag assignments found in the last trip", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Collect suggestions: only items where the suggestion differs from current bag_hint_id
+        List<int[]> suggestions = new ArrayList<>(); // [itemId, bagId, bagHintId]
+        List<String[]> suggestionLabels = new ArrayList<>(); // [itemName, bagName, bagColor]
+        do {
+            int itemId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("item_id"));
+            String itemName = itemCursor.getString(itemCursor.getColumnIndexOrThrow("item_name"));
+            int bagHintId = itemCursor.isNull(itemCursor.getColumnIndexOrThrow("bag_hint_id")) ? 0 :
+                    itemCursor.getInt(itemCursor.getColumnIndexOrThrow("bag_hint_id"));
+            int bagId = itemCursor.getInt(itemCursor.getColumnIndexOrThrow("bag_id"));
+            String bagName = itemCursor.getString(itemCursor.getColumnIndexOrThrow("bag_name"));
+            String bagColor = itemCursor.getString(itemCursor.getColumnIndexOrThrow("bag_color"));
+
+            if (bagId != bagHintId) {
+                suggestions.add(new int[]{itemId, bagId, bagHintId});
+                suggestionLabels.add(new String[]{itemName, bagName, bagColor});
+            }
+        } while (itemCursor.moveToNext());
+        itemCursor.close();
+
+        if (suggestions.isEmpty()) {
+            Toast.makeText(this, "All items already match their last trip bags", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Build the checklist dialog
+        float density = getResources().getDisplayMetrics().density;
+        int dp8 = (int) (8 * density);
+        int dp12 = (int) (12 * density);
+        int dp16 = (int) (16 * density);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp16, dp16, dp16, dp8);
+
+        TextView header = new TextView(this);
+        header.setText("Based on trip \"" + lastTripName + "\":");
+        header.setTextSize(14);
+        header.setPadding(0, 0, 0, dp12);
+        layout.addView(header);
+
+        final List<CheckBox> checkBoxes = new ArrayList<>();
+        for (int i = 0; i < suggestions.size(); i++) {
+            String[] labels = suggestionLabels.get(i);
+
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, dp8, 0, dp8);
+
+            CheckBox checkBox = new CheckBox(this);
+            checkBox.setChecked(true);
+            checkBoxes.add(checkBox);
+
+            View dot = new View(this);
+            LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(
+                    (int) (12 * density), (int) (12 * density));
+            dotParams.setMargins(0, 0, dp8, 0);
+            dot.setLayoutParams(dotParams);
+            GradientDrawable circle = new GradientDrawable();
+            circle.setShape(GradientDrawable.OVAL);
+            try {
+                circle.setColor(Color.parseColor(labels[2]));
+            } catch (Exception e) {
+                circle.setColor(Color.GRAY);
+            }
+            dot.setBackground(circle);
+
+            TextView label = new TextView(this);
+            label.setText(labels[0] + "  →  " + labels[1]);
+            label.setTextSize(15);
+
+            row.addView(checkBox);
+            row.addView(dot);
+            row.addView(label);
+            layout.addView(row);
+        }
+
+        ScrollView scrollView = new ScrollView(this);
+        scrollView.addView(layout);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Suggest Default Bags")
+                .setView(scrollView)
+                .setPositiveButton("Apply Selected", (dialog, which) -> {
+                    int applied = 0;
+                    for (int i = 0; i < suggestions.size(); i++) {
+                        if (!checkBoxes.get(i).isChecked()) continue;
+                        int[] s = suggestions.get(i);
+                        ContentValues values = new ContentValues();
+                        values.put("bag_hint_id", s[1]);
+                        getContentResolver().update(ItemContentProvider.CONTENT_URI, values,
+                                "_id=" + s[0], null);
+                        applied++;
+                    }
+                    Toast.makeText(this, applied + " item(s) updated.",
+                            Toast.LENGTH_SHORT).show();
+                    parentDialog.dismiss();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }
