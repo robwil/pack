@@ -57,6 +57,7 @@ public class TripDetailActivity extends AppCompatActivity {
     private int tripId;
     private ArrayList<TripItem> tripItems;
     private ArrayList<Bag> tripBags;
+    private PagerSlidingTabStrip tabs;
     private MenuItem searchMenuItem;
     private View tripContent;
     private ListView searchResultsView;
@@ -388,7 +389,7 @@ public class TripDetailActivity extends AppCompatActivity {
                 mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
                 viewPager.setAdapter(mAdapter);
 
-                PagerSlidingTabStrip tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
+                tabs = (PagerSlidingTabStrip) findViewById(R.id.tabs);
                 tabs.setViewPager(viewPager);
                 tabs.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
@@ -465,6 +466,7 @@ public class TripDetailActivity extends AppCompatActivity {
 
             mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
             viewPager.setAdapter(mAdapter);
+            tabs.setViewPager(viewPager);
             viewPager.setCurrentItem(currentPage);
         }
     }

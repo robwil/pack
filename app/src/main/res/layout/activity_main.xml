@@ -28,6 +28,7 @@
         <!-- Row 1 -->
 
         <LinearLayout
+            android:id="@+id/tile_lists"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -57,6 +58,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/tile_sets"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -86,6 +88,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/tile_bags"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -117,6 +120,7 @@
         <!-- Row 2 -->
 
         <LinearLayout
+            android:id="@+id/tile_trips"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
@@ -139,13 +143,14 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Trips"
+                android:text="@string/title_activity_trip_overview"
                 android:textSize="13sp"
                 android:textColor="#424242"
                 android:gravity="center" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/tile_cloud_backup"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_columnWeight="1"
