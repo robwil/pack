@@ -57,6 +57,7 @@ public class QuantityDialogHelper {
         layout.addView(input);
 
         List<Integer> recentQuantities = getRecentQuantities(context);
+        List<Button> recentButtons = new ArrayList<>();
         if (!recentQuantities.isEmpty()) {
             TextView recentLabel = new TextView(context);
             recentLabel.setText("Recent:");
@@ -79,7 +80,7 @@ public class QuantityDialogHelper {
                         ViewGroup.LayoutParams.WRAP_CONTENT);
                 params.setMargins(0, 0, dp8, 0);
                 btn.setLayoutParams(params);
-                btn.setOnClickListener(v -> input.setText(String.valueOf(qty)));
+                recentButtons.add(btn);
                 buttonRow.addView(btn);
             }
 
@@ -115,6 +116,14 @@ public class QuantityDialogHelper {
                 })
                 .setNegativeButton("Cancel", null)
                 .create();
+        for (Button btn : recentButtons) {
+            int qty = Integer.parseInt(btn.getText().toString());
+            btn.setOnClickListener(v -> {
+                saveRecentQuantity(context, qty);
+                listener.onQuantitySet(qty);
+                dialog.dismiss();
+            });
+        }
 
         if (quickEditListener != null) {
             Button editButton = (Button) layout.getChildAt(layout.getChildCount() - 1);

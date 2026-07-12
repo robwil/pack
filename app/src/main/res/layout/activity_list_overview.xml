@@ -23,11 +23,30 @@
         android:id="@+id/search_results"
         android:visibility="gone" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/no_search_results"
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
         android:id="@+id/empty_search_results"
-        android:visibility="gone" />
+        android:visibility="gone"
+        android:padding="32dp">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_search"
+            android:alpha="0.4"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_search_results"
+            android:textSize="16sp"
+            android:textColor="#888888"
+            android:gravity="center" />
+
+    </LinearLayout>
 
 </RelativeLayout>

@@ -28,10 +28,11 @@ public class ListOverviewActivity extends AppCompatActivity
     private ListView listView;
     private ListView searchResultsView;
     private TextView emptyListsView;
-    private TextView emptySearchView;
+    private View emptySearchView;
     private SimpleCursorAdapter searchAdapter;
     private DatabaseHelper dbHelper;
     private Cursor searchCursor;
+    private MenuItem searchMenuItem;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +42,7 @@ public class ListOverviewActivity extends AppCompatActivity
         listView = (ListView) findViewById(R.id.lists);
         emptyListsView = (TextView) findViewById(R.id.empty_lists);
         searchResultsView = (ListView) findViewById(R.id.search_results);
-        emptySearchView = (TextView) findViewById(R.id.empty_search_results);
+        emptySearchView = findViewById(R.id.empty_search_results);
         fillData();
     }
 
@@ -49,7 +50,8 @@ public class ListOverviewActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_list_overview, menu);
 
-        MenuItem searchItem = menu.findItem(R.id.action_search_items);
+        searchMenuItem = menu.findItem(R.id.action_search_items);
+        MenuItem searchItem = searchMenuItem;
         SearchView searchView = (SearchView) searchItem.getActionView();
         searchView.setQueryHint(getString(R.string.search_hint));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -101,6 +103,14 @@ public class ListOverviewActivity extends AppCompatActivity
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         adapter.swapCursor(null);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
+            searchMenuItem.collapseActionView();
+        }
     }
 
     @Override
