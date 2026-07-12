@@ -44,6 +44,9 @@
     <string name="action_copy_trip">Copy Trip</string>
     <string name="action_delete_trip">Delete Trip</string>
     <string name="action_manage_trip_bags">Bags</string>
+    <string name="action_search_trip_items">Search Trip Items</string>
+    <string name="trip_search_hint">Search items in this trip…</string>
+    <string name="no_trip_search_results">No matching items found.</string>
 
     <!-- Strings for Bag Management Activity -->
     <string name="title_activity_bag_management">Bags</string>

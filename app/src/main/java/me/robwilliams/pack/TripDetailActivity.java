@@ -6,20 +6,36 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import androidx.appcompat.widget.SearchView;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.astuetz.PagerSlidingTabStrip;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import me.robwilliams.pack.adapter.TripDetailPagerAdapter;
@@ -41,6 +57,10 @@ public class TripDetailActivity extends AppCompatActivity {
     private int tripId;
     private ArrayList<TripItem> tripItems;
     private ArrayList<Bag> tripBags;
+    private MenuItem searchMenuItem;
+    private View tripContent;
+    private ListView searchResultsView;
+    private View emptySearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +68,9 @@ public class TripDetailActivity extends AppCompatActivity {
         setContentView(R.layout.activity_trip_detail);
 
         tripItems = new ArrayList<>();
+        tripContent = findViewById(R.id.trip_content);
+        searchResultsView = (ListView) findViewById(R.id.trip_search_results);
+        emptySearchView = findViewById(R.id.empty_trip_search_results);
 
         // Restore Trip details from saved instance or Intent
         Bundle extras = getIntent().getExtras();
@@ -66,6 +89,9 @@ public class TripDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (searchMenuItem != null && searchMenuItem.isActionViewExpanded()) {
+            searchMenuItem.collapseActionView();
+        }
         if (tripUri != null && viewPager != null) {
             reloadTripData();
         }
@@ -73,9 +99,216 @@ public class TripDetailActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_trip_detail, menu);
+
+        searchMenuItem = menu.findItem(R.id.action_search_trip_items);
+        SearchView searchView = (SearchView) searchMenuItem.getActionView();
+        searchView.setQueryHint(getString(R.string.trip_search_hint));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performTripSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() == 0) {
+                    showTripMode();
+                } else {
+                    performTripSearch(newText);
+                }
+                return true;
+            }
+        });
+
+        searchMenuItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                showTripMode();
+                return true;
+            }
+        });
+
         return true;
+    }
+
+    private void performTripSearch(String query) {
+        String lowerQuery = query.toLowerCase(Locale.getDefault());
+        final List<TripItem> matchedItems = new ArrayList<>();
+        final Map<TripItem, Integer> originalIndex = new HashMap<>();
+
+        for (int i = 0; i < tripItems.size(); i++) {
+            TripItem item = tripItems.get(i);
+            if (item.getItemName().toLowerCase(Locale.getDefault()).contains(lowerQuery)) {
+                matchedItems.add(item);
+                originalIndex.put(item, i);
+            }
+        }
+
+        Collections.sort(matchedItems, new Comparator<TripItem>() {
+            @Override
+            public int compare(TripItem a, TripItem b) {
+                // Status descending (Repacked 3 > Packed 2 > To Pack 1 > Not Selected 0)
+                int statusCmp = Integer.compare(b.getStatus(), a.getStatus());
+                if (statusCmp != 0) return statusCmp;
+                // Category alphabetically
+                int catCmp = a.getListName().compareToIgnoreCase(b.getListName());
+                if (catCmp != 0) return catCmp;
+                // Original load order preserves weight within category
+                return Integer.compare(originalIndex.get(a), originalIndex.get(b));
+            }
+        });
+
+        final float density = getResources().getDisplayMetrics().density;
+
+        BaseAdapter adapter = new BaseAdapter() {
+            @Override
+            public int getCount() { return matchedItems.size(); }
+
+            @Override
+            public Object getItem(int position) { return matchedItems.get(position); }
+
+            @Override
+            public long getItemId(int position) { return position; }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TripItem item = matchedItems.get(position);
+
+                LinearLayout layout;
+                if (convertView instanceof LinearLayout) {
+                    layout = (LinearLayout) convertView;
+                    layout.removeAllViews();
+                } else {
+                    layout = new LinearLayout(TripDetailActivity.this);
+                    layout.setOrientation(LinearLayout.VERTICAL);
+                    layout.setPadding((int)(12 * density), (int)(10 * density),
+                            (int)(12 * density), (int)(10 * density));
+                }
+
+                // Item name
+                TextView nameView = new TextView(TripDetailActivity.this);
+                String displayName = item.getItemName();
+                if (item.getQuantity() > 1) {
+                    displayName += " x" + item.getQuantity();
+                }
+                nameView.setText(displayName);
+                nameView.setTextSize(16);
+                nameView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                layout.addView(nameView);
+
+                // Detail row: category + bag chip + bag name + status
+                LinearLayout detailRow = new LinearLayout(TripDetailActivity.this);
+                detailRow.setOrientation(LinearLayout.HORIZONTAL);
+                detailRow.setGravity(Gravity.CENTER_VERTICAL);
+                detailRow.setPadding(0, (int)(2 * density), 0, 0);
+
+                TextView categoryView = new TextView(TripDetailActivity.this);
+                categoryView.setText(item.getListName());
+                categoryView.setTextSize(13);
+                categoryView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                detailRow.addView(categoryView);
+
+                if (item.getBagName() != null && !item.getBagName().isEmpty()) {
+                    TextView separator = new TextView(TripDetailActivity.this);
+                    separator.setText(" · ");
+                    separator.setTextSize(13);
+                    separator.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    detailRow.addView(separator);
+
+                    if (item.getBagColor() != null) {
+                        View dot = new View(TripDetailActivity.this);
+                        int chipSize = (int)(10 * density);
+                        LinearLayout.LayoutParams dotParams = new LinearLayout.LayoutParams(chipSize, chipSize);
+                        dotParams.gravity = Gravity.CENTER_VERTICAL;
+                        dotParams.setMargins(0, 0, (int)(4 * density), 0);
+                        dot.setLayoutParams(dotParams);
+                        GradientDrawable circle = new GradientDrawable();
+                        circle.setShape(GradientDrawable.OVAL);
+                        try {
+                            circle.setColor(Color.parseColor(item.getBagColor()));
+                        } catch (Exception e) {
+                            circle.setColor(Color.GRAY);
+                        }
+                        dot.setBackground(circle);
+                        detailRow.addView(dot);
+                    }
+
+                    TextView bagView = new TextView(TripDetailActivity.this);
+                    bagView.setText(item.getBagName());
+                    bagView.setTextSize(13);
+                    bagView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    detailRow.addView(bagView);
+                }
+
+                TextView statusView = new TextView(TripDetailActivity.this);
+                statusView.setText(" · " + getStatusLabel(item.getStatus()));
+                statusView.setTextSize(13);
+                statusView.setTextColor(getStatusColor(item.getStatus()));
+                detailRow.addView(statusView);
+
+                layout.addView(detailRow);
+                return layout;
+            }
+        };
+
+        searchResultsView.setAdapter(adapter);
+        searchResultsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position < matchedItems.size()) {
+                    TripItem item = matchedItems.get(position);
+                    int targetPage = resolvePageForStatus(item.getStatus());
+                    searchMenuItem.collapseActionView();
+                    viewPager.setCurrentItem(targetPage);
+                }
+            }
+        });
+
+        showSearchMode(matchedItems.isEmpty());
+    }
+
+    private String getStatusLabel(int status) {
+        if (status >= AbstractPackingFragment.STATUS_REPACKED) return "Repacked";
+        if (status >= AbstractPackingFragment.STATUS_PACKED) return "Packed";
+        if (status >= AbstractPackingFragment.STATUS_SHOULD_PACK) return "To pack";
+        return "Not selected";
+    }
+
+    private int getStatusColor(int status) {
+        if (status >= AbstractPackingFragment.STATUS_REPACKED) return 0xFF2E7D32;
+        if (status >= AbstractPackingFragment.STATUS_PACKED) return 0xFF1565C0;
+        if (status >= AbstractPackingFragment.STATUS_SHOULD_PACK) return 0xFFE65100;
+        return Color.GRAY;
+    }
+
+    private int resolvePageForStatus(int status) {
+        if (status >= AbstractPackingFragment.STATUS_REPACKED) return 2;
+        if (status >= AbstractPackingFragment.STATUS_PACKED) return 1;
+        return 0;
+    }
+
+    private void showSearchMode(boolean empty) {
+        tripContent.setVisibility(View.GONE);
+        if (empty) {
+            searchResultsView.setVisibility(View.GONE);
+            emptySearchView.setVisibility(View.VISIBLE);
+        } else {
+            searchResultsView.setVisibility(View.VISIBLE);
+            emptySearchView.setVisibility(View.GONE);
+        }
+    }
+
+    private void showTripMode() {
+        searchResultsView.setVisibility(View.GONE);
+        emptySearchView.setVisibility(View.GONE);
+        tripContent.setVisibility(View.VISIBLE);
     }
 
     private void fillData(Uri uri) {
