@@ -64,6 +64,14 @@ public class TripDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (tripUri != null && viewPager != null) {
+            reloadTripData();
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_trip_detail, menu);
@@ -167,6 +175,64 @@ public class TripDetailActivity extends AppCompatActivity {
                 viewPager.setCurrentItem(
                         BagSelectionLogic.resolveDefaultPage(maximumStatus, hasActiveItems, allPacked));
             }
+        }
+    }
+
+    private void reloadTripData() {
+        int currentPage = viewPager.getCurrentItem();
+        tripItems.clear();
+
+        SQLiteDatabase db = new DatabaseHelper(this).getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT L.name as list_name, L.weight as list_weight, " +
+                "I._id as item_id, I.name as item_name, I.weight as item_weight, I.bag_hint_id, " +
+                "TI.status as status, COALESCE(TI.quantity, 1) as quantity, TI.bag_id as bag_id, " +
+                "B.name as bag_name, B.color as bag_color, " +
+                "LSL.listset_id as listset_id FROM trip T " +
+                "INNER JOIN trip_listset TLS ON T._id=TLS.trip_id AND TLS.trip_id=" + tripId + " " +
+                "INNER JOIN listset_list LSL ON LSL.listset_id=TLS.listset_id " +
+                "INNER JOIN list L ON L._id=LSL.list_id " +
+                "INNER JOIN item I ON I.list_id=LSL.list_id " +
+                "LEFT JOIN trip_item TI ON TI.trip_id=TLS.trip_id AND TI.item_id=I._id " +
+                "LEFT JOIN bag B ON B._id=TI.bag_id " +
+                "ORDER BY list_weight DESC, list_name ASC, item_weight DESC, item_name ASC", null);
+
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                String listName = cursor.getString(cursor.getColumnIndexOrThrow("list_name"));
+                int itemId = cursor.getInt(cursor.getColumnIndexOrThrow("item_id"));
+                int listsetId = cursor.getInt(cursor.getColumnIndexOrThrow("listset_id"));
+                String itemName = cursor.getString(cursor.getColumnIndexOrThrow("item_name"));
+                int status = cursor.getInt(cursor.getColumnIndexOrThrow("status"));
+                int quantity = cursor.getInt(cursor.getColumnIndexOrThrow("quantity"));
+                int bagId = cursor.isNull(cursor.getColumnIndexOrThrow("bag_id")) ? 0 :
+                        cursor.getInt(cursor.getColumnIndexOrThrow("bag_id"));
+                String bagName = cursor.getString(cursor.getColumnIndexOrThrow("bag_name"));
+                String bagColor = cursor.getString(cursor.getColumnIndexOrThrow("bag_color"));
+                int bagHintId = cursor.isNull(cursor.getColumnIndexOrThrow("bag_hint_id")) ? 0 :
+                        cursor.getInt(cursor.getColumnIndexOrThrow("bag_hint_id"));
+                tripItems.add(new TripItem(itemId, listsetId, listName, itemName, status,
+                        quantity, bagId, bagName, bagColor, bagHintId));
+            }
+            cursor.close();
+
+            tripBags = new ArrayList<>();
+            Cursor bagCursor = db.rawQuery(
+                    "SELECT B._id, B.name, B.color FROM trip_bag TB " +
+                    "INNER JOIN bag B ON B._id = TB.bag_id " +
+                    "WHERE TB.trip_id = " + tripId + " ORDER BY B.name ASC", null);
+            if (bagCursor != null) {
+                while (bagCursor.moveToNext()) {
+                    tripBags.add(new Bag(
+                            bagCursor.getInt(0),
+                            bagCursor.getString(1),
+                            bagCursor.getString(2)));
+                }
+                bagCursor.close();
+            }
+
+            mAdapter = new TripDetailPagerAdapter(getSupportFragmentManager(), tripId, tripItems, tripBags);
+            viewPager.setAdapter(mAdapter);
+            viewPager.setCurrentItem(currentPage);
         }
     }
 
