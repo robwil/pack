@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.graphics.drawable.GradientDrawable;
+import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -112,6 +113,8 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
             textView.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
             textView.setTextSize(16);
+            textView.setMaxLines(3);
+            textView.setEllipsize(TextUtils.TruncateAt.END);
 
             View bagChip = new View(context);
             float density = context.getResources().getDisplayMetrics().density;
