@@ -2,7 +2,10 @@ package me.robwilliams.pack.adapter;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.net.Uri;
 import android.graphics.drawable.GradientDrawable;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -21,9 +24,12 @@ import java.util.Map;
 
 import me.robwilliams.pack.BagPickerDialogHelper;
 import me.robwilliams.pack.BagSelectionLogic;
+import me.robwilliams.pack.ListItemDetailActivity;
 import me.robwilliams.pack.QuantityDialogHelper;
 import me.robwilliams.pack.R;
 import me.robwilliams.pack.data.Bag;
+import me.robwilliams.pack.data.ItemContentProvider;
+import me.robwilliams.pack.data.ListContentProvider;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
 import me.robwilliams.pack.fragment.AbstractPackingFragment;
@@ -217,6 +223,12 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
                                 }
                                 notifyDataSetChanged();
                             }
+                        },
+                        new QuantityDialogHelper.OnQuickEditListener() {
+                            @Override
+                            public void onQuickEdit() {
+                                launchItemEditor(itemId);
+                            }
                         });
                 return true;
             }
@@ -270,6 +282,24 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
             if (listener != null) {
                 listener.onDataChanged();
             }
+        }
+    }
+
+    private void launchItemEditor(int itemId) {
+        Cursor cursor = context.getContentResolver().query(
+                ItemContentProvider.CONTENT_URI,
+                new String[]{"_id", "list_id"},
+                "_id=" + itemId, null, null);
+        if (cursor != null && cursor.moveToFirst()) {
+            int listId = cursor.getInt(cursor.getColumnIndexOrThrow("list_id"));
+            cursor.close();
+            Uri itemUri = Uri.parse(ItemContentProvider.CONTENT_URI + "/" + itemId);
+            Intent intent = new Intent(context, ListItemDetailActivity.class);
+            intent.putExtra(ItemContentProvider.CONTENT_ITEM_TYPE, itemUri);
+            intent.putExtra(ListContentProvider.CONTENT_ID_TYPE, listId);
+            context.startActivity(intent);
+        } else {
+            if (cursor != null) cursor.close();
         }
     }
 

@@ -5,6 +5,9 @@
     <string name="title_activity_list_overview">Packing Lists</string>
     <string name="action_add_list">Add List</string>
     <string name="no_lists">Currently there are no Packing Lists. Please add one.</string>
+    <string name="action_search_items">Search Items</string>
+    <string name="search_hint">Search items across lists…</string>
+    <string name="no_search_results">No matching items found.</string>
 
     <!-- Strings for List Detail Activity -->
     <string name="title_activity_list_detail">Add Packing List</string>

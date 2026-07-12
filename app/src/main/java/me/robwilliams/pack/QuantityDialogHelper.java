@@ -28,8 +28,18 @@ public class QuantityDialogHelper {
         void onQuantitySet(int quantity);
     }
 
+    public interface OnQuickEditListener {
+        void onQuickEdit();
+    }
+
     public static void show(Context context, String itemName, int currentQuantity,
                             OnQuantitySetListener listener) {
+        show(context, itemName, currentQuantity, listener, null);
+    }
+
+    public static void show(Context context, String itemName, int currentQuantity,
+                            OnQuantitySetListener listener,
+                            OnQuickEditListener quickEditListener) {
         float density = context.getResources().getDisplayMetrics().density;
         int dp16 = (int) (16 * density);
         int dp8 = (int) (8 * density);
@@ -77,10 +87,21 @@ public class QuantityDialogHelper {
             layout.addView(scrollView);
         }
 
-        new AlertDialog.Builder(context)
+        if (quickEditListener != null) {
+            Button editButton = new Button(context);
+            editButton.setText("Quick Edit Item…");
+            editButton.setTextSize(14);
+            LinearLayout.LayoutParams editParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            editParams.setMargins(0, dp8, 0, 0);
+            editButton.setLayoutParams(editParams);
+            layout.addView(editButton);
+        }
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Quantity: " + itemName)
                 .setView(layout)
-                .setPositiveButton("OK", (dialog, which) -> {
+                .setPositiveButton("OK", (d, which) -> {
                     String text = input.getText().toString().trim();
                     int quantity = 1;
                     try {
@@ -93,7 +114,17 @@ public class QuantityDialogHelper {
                     listener.onQuantitySet(quantity);
                 })
                 .setNegativeButton("Cancel", null)
-                .show();
+                .create();
+
+        if (quickEditListener != null) {
+            Button editButton = (Button) layout.getChildAt(layout.getChildCount() - 1);
+            editButton.setOnClickListener(v -> {
+                dialog.dismiss();
+                quickEditListener.onQuickEdit();
+            });
+        }
+
+        dialog.show();
     }
 
     private static List<Integer> getRecentQuantities(Context context) {

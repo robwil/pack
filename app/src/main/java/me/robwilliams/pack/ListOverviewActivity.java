@@ -5,34 +5,84 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
+import me.robwilliams.pack.data.DatabaseHelper;
 import me.robwilliams.pack.data.ListContentProvider;
 
 public class ListOverviewActivity extends AppCompatActivity
         implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private SimpleCursorAdapter adapter;
+    private ListView listView;
+    private ListView searchResultsView;
+    private TextView emptyListsView;
+    private TextView emptySearchView;
+    private SimpleCursorAdapter searchAdapter;
+    private DatabaseHelper dbHelper;
+    private Cursor searchCursor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_list_overview);
+        dbHelper = new DatabaseHelper(this);
+        listView = (ListView) findViewById(R.id.lists);
+        emptyListsView = (TextView) findViewById(R.id.empty_lists);
+        searchResultsView = (ListView) findViewById(R.id.search_results);
+        emptySearchView = (TextView) findViewById(R.id.empty_search_results);
         fillData();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_list_overview, menu);
+
+        MenuItem searchItem = menu.findItem(R.id.action_search_items);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setQueryHint(getString(R.string.search_hint));
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                performSearch(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (newText.length() == 0) {
+                    showListMode();
+                } else {
+                    performSearch(newText);
+                }
+                return true;
+            }
+        });
+
+        searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                showListMode();
+                return true;
+            }
+        });
+
         return true;
     }
 
@@ -53,18 +103,25 @@ public class ListOverviewActivity extends AppCompatActivity
         adapter.swapCursor(null);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (searchCursor != null) {
+            searchCursor.close();
+        }
+    }
+
     private void fillData() {
         getLoaderManager().initLoader(0, null, this);
         adapter = new SimpleCursorAdapter(this,
                 android.R.layout.simple_list_item_1,
-                null, // null cursor to start with, because it will get swapped in when load finished
+                null,
                 new String[] { "name" },
                 new int[] { android.R.id.text1 },
                 0);
 
-        ListView listView = (ListView) findViewById(R.id.lists);
         listView.setAdapter(adapter);
-        listView.setEmptyView(findViewById(R.id.empty_lists));
+        listView.setEmptyView(emptyListsView);
 
         final ListOverviewActivity that = this;
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -76,6 +133,66 @@ public class ListOverviewActivity extends AppCompatActivity
                 startActivity(i);
             }
         });
+    }
+
+    private void performSearch(String query) {
+        if (searchCursor != null) {
+            searchCursor.close();
+        }
+
+        String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        searchCursor = db.rawQuery(
+                "SELECT I._id AS _id, I.name AS item_name, L.name AS list_name, L._id AS list_id" +
+                " FROM item I INNER JOIN list L ON I.list_id = L._id" +
+                " WHERE I.name LIKE ? ESCAPE '\\'" +
+                " ORDER BY L.weight DESC, L.name ASC, I.weight DESC, I.name ASC",
+                new String[] { pattern });
+
+        if (searchAdapter == null) {
+            searchAdapter = new SimpleCursorAdapter(this,
+                    R.layout.item_search_result,
+                    searchCursor,
+                    new String[] { "item_name", "list_name" },
+                    new int[] { R.id.item_name, R.id.list_name },
+                    0);
+            searchResultsView.setAdapter(searchAdapter);
+            searchResultsView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    Cursor cursor = (Cursor) searchAdapter.getItem(position);
+                    long listId = cursor.getLong(cursor.getColumnIndexOrThrow("list_id"));
+                    Intent i = new Intent(ListOverviewActivity.this, ListDetailActivity.class);
+                    Uri listUri = Uri.parse(ListContentProvider.CONTENT_URI + "/" + listId);
+                    i.putExtra(ListContentProvider.CONTENT_ITEM_TYPE, listUri);
+                    startActivity(i);
+                }
+            });
+        } else {
+            searchAdapter.swapCursor(searchCursor);
+        }
+
+        showSearchMode();
+    }
+
+    private void showSearchMode() {
+        listView.setVisibility(View.GONE);
+        emptyListsView.setVisibility(View.GONE);
+        searchResultsView.setVisibility(View.VISIBLE);
+        searchResultsView.setEmptyView(emptySearchView);
+        emptySearchView.setVisibility(searchAdapter != null && searchAdapter.getCount() == 0
+                ? View.VISIBLE : View.GONE);
+    }
+
+    private void showListMode() {
+        searchResultsView.setVisibility(View.GONE);
+        emptySearchView.setVisibility(View.GONE);
+        listView.setVisibility(View.VISIBLE);
+        listView.setEmptyView(emptyListsView);
+        if (searchCursor != null) {
+            searchCursor.close();
+            searchCursor = null;
+        }
     }
 
     //
