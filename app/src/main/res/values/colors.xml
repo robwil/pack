@@ -2,4 +2,12 @@
 <resources>
     <color name="primary">#75D975</color>
     <color name="primary_dark">#1a8f0f</color>
+
+    <!-- Theme-aware colors (light defaults) -->
+    <color name="background">#FAFAFA</color>
+    <color name="tile_text">#424242</color>
+    <color name="tile_surface">#FFFFFF</color>
+    <color name="tile_border">#E0E0E0</color>
+    <color name="hint_text">#888888</color>
+    <color name="bag_legend_background">#FFF5F5F5</color>
 </resources>

@@ -23,7 +23,7 @@
             android:paddingRight="12dp"
             android:paddingTop="6dp"
             android:paddingBottom="6dp"
-            android:background="#FFF5F5F5" />
+            android:background="@color/bag_legend_background" />
 
     </HorizontalScrollView>
 
