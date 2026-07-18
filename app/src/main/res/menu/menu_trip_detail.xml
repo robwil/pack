@@ -11,6 +11,9 @@
     <item android:id="@+id/action_manage_bags" android:title="@string/action_manage_trip_bags"
         android:orderInCategory="50" app:showAsAction="ifRoom"
         android:onClick="showTripBagSelection" />
+    <item android:id="@+id/action_clear_repack" android:title="@string/action_clear_repack"
+        android:orderInCategory="90" app:showAsAction="never"
+        android:onClick="clearRepackItems" />
     <item android:id="@+id/action_copy_trip" android:title="@string/action_copy_trip"
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="showCopyTripDialog" />

@@ -6,14 +6,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import androidx.appcompat.widget.SearchView;
+import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
@@ -46,7 +49,9 @@ import me.robwilliams.pack.data.TripBagContentProvider;
 import me.robwilliams.pack.data.TripContentProvider;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
+import me.robwilliams.pack.data.TripNoteContentProvider;
 import me.robwilliams.pack.data.TripSetContentProvider;
+import me.robwilliams.pack.data.TripTodoContentProvider;
 import me.robwilliams.pack.fragment.AbstractPackingFragment;
 
 public class TripDetailActivity extends AppCompatActivity {
@@ -62,6 +67,7 @@ public class TripDetailActivity extends AppCompatActivity {
     private View tripContent;
     private ListView searchResultsView;
     private View emptySearchView;
+    private int pendingHighlightItemId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +93,10 @@ public class TripDetailActivity extends AppCompatActivity {
         }
     }
 
+    public void setPendingHighlightItemId(int itemId) {
+        this.pendingHighlightItemId = itemId;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -95,7 +105,23 @@ public class TripDetailActivity extends AppCompatActivity {
         }
         if (tripUri != null && viewPager != null) {
             reloadTripData();
+            dispatchPendingHighlight();
         }
+    }
+
+    private void dispatchPendingHighlight() {
+        if (pendingHighlightItemId < 0 || viewPager == null || mAdapter == null) return;
+        final int itemId = pendingHighlightItemId;
+        pendingHighlightItemId = -1;
+        viewPager.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Fragment f = mAdapter.getActiveFragment(viewPager.getCurrentItem());
+                if (f instanceof AbstractPackingFragment) {
+                    ((AbstractPackingFragment) f).scrollToAndHighlightItem(itemId);
+                }
+            }
+        }, 400);
     }
 
     @Override
@@ -201,7 +227,7 @@ public class TripDetailActivity extends AppCompatActivity {
                 }
                 nameView.setText(displayName);
                 nameView.setTextSize(16);
-                nameView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                nameView.setTextColor(resolveThemeTextColor(android.R.attr.textColorPrimary));
                 layout.addView(nameView);
 
                 // Detail row: category + bag chip + bag name + status
@@ -213,14 +239,14 @@ public class TripDetailActivity extends AppCompatActivity {
                 TextView categoryView = new TextView(TripDetailActivity.this);
                 categoryView.setText(item.getListName());
                 categoryView.setTextSize(13);
-                categoryView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                categoryView.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                 detailRow.addView(categoryView);
 
                 if (item.getBagName() != null && !item.getBagName().isEmpty()) {
                     TextView separator = new TextView(TripDetailActivity.this);
                     separator.setText(" · ");
                     separator.setTextSize(13);
-                    separator.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    separator.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                     detailRow.addView(separator);
 
                     if (item.getBagColor() != null) {
@@ -244,7 +270,7 @@ public class TripDetailActivity extends AppCompatActivity {
                     TextView bagView = new TextView(TripDetailActivity.this);
                     bagView.setText(item.getBagName());
                     bagView.setTextSize(13);
-                    bagView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    bagView.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                     detailRow.addView(bagView);
                 }
 
@@ -266,8 +292,10 @@ public class TripDetailActivity extends AppCompatActivity {
                 if (position < matchedItems.size()) {
                     TripItem item = matchedItems.get(position);
                     int targetPage = resolvePageForStatus(item.getStatus());
+                    pendingHighlightItemId = item.getItemId();
                     searchMenuItem.collapseActionView();
                     viewPager.setCurrentItem(targetPage);
+                    dispatchPendingHighlight();
                 }
             }
         });
@@ -472,71 +500,124 @@ public class TripDetailActivity extends AppCompatActivity {
     }
 
     public void showCopyTripDialog(MenuItem item) {
-        // Construct dialog to Name the Trip
-        final EditText txtTripName = new EditText(this);
-        int dpPadding = 16;  // 16 dps
         final float scale = getResources().getDisplayMetrics().density;
-        int pxPadding = (int) (dpPadding * scale + 0.5f);
-        txtTripName.setPadding(pxPadding, pxPadding, pxPadding, pxPadding);
+        int dp16 = (int) (16 * scale + 0.5f);
+        int dp8 = (int) (8 * scale + 0.5f);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp16, dp16, dp16, dp8);
+
+        final EditText txtTripName = new EditText(this);
+        txtTripName.setHint("Trip name");
+        layout.addView(txtTripName);
+
+        final CheckBox cbBags = new CheckBox(this);
+        cbBags.setText("Copy bag assignments");
+        cbBags.setChecked(true);
+        LinearLayout.LayoutParams cbParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        cbParams.setMargins(0, dp8, 0, 0);
+        cbBags.setLayoutParams(cbParams);
+        layout.addView(cbBags);
+
+        final CheckBox cbNotes = new CheckBox(this);
+        cbNotes.setText("Copy notes & to-dos");
+        cbNotes.setChecked(false);
+        cbNotes.setLayoutParams(cbParams);
+        layout.addView(cbNotes);
 
         final TripDetailActivity that = this;
         new AlertDialog.Builder(this)
             .setTitle("Copy Trip")
-            .setMessage("Select a name for the new trip.")
-            .setView(txtTripName)
+            .setView(layout)
             .setPositiveButton("Copy", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Toast.makeText(that, "Copying Trip...", Toast.LENGTH_SHORT).show();
-                    // First, create the Trip with the given name.
                     String tripName = txtTripName.getText().toString();
                     ContentValues values = new ContentValues();
                     values.put("name", tripName);
-                    Uri tripUri = getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
-                    long tripId = Long.parseLong(tripUri.getLastPathSegment());
-                    // Iterate through existing Trip's items to figure out Sets and Items we want
+                    Uri newTripUri = getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
+                    long newTripId = Long.parseLong(newTripUri.getLastPathSegment());
+
                     Set<Integer> setIds = new HashSet<>();
                     for (TripItem tripItem : tripItems) {
                         setIds.add(tripItem.getListsetId());
                     }
-                    // Next setup the join table relationship between new Trip and original Trip's sets
                     for (int listsetId : setIds) {
                         values = new ContentValues();
-                        values.put("trip_id", tripId);
+                        values.put("trip_id", newTripId);
                         values.put("listset_id", listsetId);
                         getContentResolver().insert(TripSetContentProvider.CONTENT_URI, values);
                     }
-                    // Finally setup the Trip Item join table with a status of SHOULD_PACK
+
+                    boolean copyBags = cbBags.isChecked();
                     for (TripItem ti : tripItems) {
                         if (ti.getStatus() >= AbstractPackingFragment.STATUS_SHOULD_PACK) {
                             values = new ContentValues();
-                            values.put("trip_id", tripId);
+                            values.put("trip_id", newTripId);
                             values.put("item_id", ti.getItemId());
                             values.put("status", AbstractPackingFragment.STATUS_SHOULD_PACK);
                             values.put("quantity", ti.getQuantity());
+                            if (copyBags && ti.getBagId() > 0) {
+                                values.put("bag_id", ti.getBagId());
+                            }
                             getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
                         }
                     }
-                    // Copy trip bags
-                    if (tripBags != null) {
+
+                    if (copyBags && tripBags != null) {
                         for (Bag bag : tripBags) {
                             values = new ContentValues();
-                            values.put("trip_id", tripId);
+                            values.put("trip_id", newTripId);
                             values.put("bag_id", bag.getId());
                             getContentResolver().insert(TripBagContentProvider.CONTENT_URI, values);
                         }
                     }
-                    // Then transition to the new Trip
+
+                    if (cbNotes.isChecked()) {
+                        copyTripNotes(newTripId);
+                    }
+
                     Intent i = new Intent(that, TripDetailActivity.class);
-                    tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + tripId);
-                    i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
+                    newTripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + newTripId);
+                    i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, newTripUri);
                     startActivity(i);
                 }
             })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                }
-            })
+            .setNegativeButton("Cancel", null)
             .show();
+    }
+
+    private void copyTripNotes(long newTripId) {
+        Cursor cursor = getContentResolver().query(
+                TripNoteContentProvider.CONTENT_URI,
+                new String[]{"content"}, "trip_id=" + tripId, null, null);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("trip_id", newTripId);
+                values.put("content", cursor.getString(0));
+                getContentResolver().insert(TripNoteContentProvider.CONTENT_URI, values);
+            }
+            cursor.close();
+        }
+
+        cursor = getContentResolver().query(
+                TripTodoContentProvider.CONTENT_URI,
+                new String[]{"text", "done", "sort_order"},
+                "trip_id=" + tripId, null, "sort_order ASC");
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("trip_id", newTripId);
+                values.put("text", cursor.getString(0));
+                values.put("done", cursor.getInt(1));
+                values.put("sort_order", cursor.getInt(2));
+                getContentResolver().insert(TripTodoContentProvider.CONTENT_URI, values);
+            }
+            cursor.close();
+        }
     }
 
     public void showTripBagSelection(MenuItem item) {
@@ -561,6 +642,40 @@ public class TripDetailActivity extends AppCompatActivity {
                 });
     }
 
+    public void clearRepackItems(MenuItem item) {
+        int repackCount = 0;
+        for (TripItem ti : tripItems) {
+            if (ti.getStatus() >= AbstractPackingFragment.STATUS_REPACKED) {
+                repackCount++;
+            }
+        }
+        if (repackCount == 0) {
+            Toast.makeText(this, "No repacked items to clear.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final int count = repackCount;
+        new AlertDialog.Builder(this)
+            .setTitle("Clear Repack")
+            .setMessage("Move " + count + " repacked item(s) back to packed?")
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    ContentValues values = new ContentValues();
+                    values.put("status", AbstractPackingFragment.STATUS_PACKED);
+                    getContentResolver().update(TripItemContentProvider.CONTENT_URI, values,
+                            "trip_id=" + tripId + " AND status=" + AbstractPackingFragment.STATUS_REPACKED, null);
+                    for (TripItem ti : tripItems) {
+                        if (ti.getStatus() >= AbstractPackingFragment.STATUS_REPACKED) {
+                            ti.setStatus(AbstractPackingFragment.STATUS_PACKED);
+                        }
+                    }
+                    reloadTripData();
+                    Toast.makeText(TripDetailActivity.this,
+                            count + " item(s) moved back to packed.", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton(android.R.string.no, null).show();
+    }
+
     public void deleteTrip(MenuItem item) {
         final TripDetailActivity that = this;
         new AlertDialog.Builder(this)
@@ -579,4 +694,10 @@ public class TripDetailActivity extends AppCompatActivity {
             .setNegativeButton(android.R.string.no, null).show();
     }
 
+    private int resolveThemeTextColor(int attr) {
+        TypedArray a = obtainStyledAttributes(new int[]{attr});
+        int color = a.getColor(0, Color.BLACK);
+        a.recycle();
+        return color;
+    }
 }

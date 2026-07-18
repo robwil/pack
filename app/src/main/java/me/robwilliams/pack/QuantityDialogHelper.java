@@ -32,14 +32,25 @@ public class QuantityDialogHelper {
         void onQuickEdit();
     }
 
+    public interface OnReassignBagListener {
+        void onReassignBag();
+    }
+
     public static void show(Context context, String itemName, int currentQuantity,
                             OnQuantitySetListener listener) {
-        show(context, itemName, currentQuantity, listener, null);
+        show(context, itemName, currentQuantity, listener, null, null);
     }
 
     public static void show(Context context, String itemName, int currentQuantity,
                             OnQuantitySetListener listener,
                             OnQuickEditListener quickEditListener) {
+        show(context, itemName, currentQuantity, listener, quickEditListener, null);
+    }
+
+    public static void show(Context context, String itemName, int currentQuantity,
+                            OnQuantitySetListener listener,
+                            OnQuickEditListener quickEditListener,
+                            OnReassignBagListener reassignBagListener) {
         float density = context.getResources().getDisplayMetrics().density;
         int dp16 = (int) (16 * density);
         int dp8 = (int) (8 * density);
@@ -99,6 +110,17 @@ public class QuantityDialogHelper {
             layout.addView(editButton);
         }
 
+        if (reassignBagListener != null) {
+            Button reassignButton = new Button(context);
+            reassignButton.setText("Reassign Bag…");
+            reassignButton.setTextSize(14);
+            LinearLayout.LayoutParams reassignParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            reassignParams.setMargins(0, dp8, 0, 0);
+            reassignButton.setLayoutParams(reassignParams);
+            layout.addView(reassignButton);
+        }
+
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle("Quantity: " + itemName)
                 .setView(layout)
@@ -125,8 +147,18 @@ public class QuantityDialogHelper {
             });
         }
 
+        if (reassignBagListener != null) {
+            Button reassignButton = (Button) layout.getChildAt(layout.getChildCount() - 1);
+            reassignButton.setOnClickListener(v -> {
+                dialog.dismiss();
+                reassignBagListener.onReassignBag();
+            });
+        }
+
         if (quickEditListener != null) {
-            Button editButton = (Button) layout.getChildAt(layout.getChildCount() - 1);
+            int editIndex = layout.getChildCount() - 1;
+            if (reassignBagListener != null) editIndex--;
+            Button editButton = (Button) layout.getChildAt(editIndex);
             editButton.setOnClickListener(v -> {
                 dialog.dismiss();
                 quickEditListener.onQuickEdit();

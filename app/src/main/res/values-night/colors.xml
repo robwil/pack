@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme overrides -->
+    <color name="primary">#2E7D32</color>
+    <color name="primary_dark">#1B5E20</color>
+    <color name="home_accent">#75D975</color>
+    <color name="background">#121212</color>
+    <color name="tile_text">#E0E0E0</color>
+    <color name="tile_surface">#1E1E1E</color>
+    <color name="tile_border">#333333</color>
+    <color name="hint_text">#AAAAAA</color>
+
+    <color name="highlight">#4D4CAF50</color>
+    <color name="group_expanded_bg">#223D22</color>
+    <color name="group_collapsed_bg">#1E1E1E</color>
+    <color name="group_text">#A5D6A7</color>
+    <color name="bag_legend_text">#BBBBBB</color>
+</resources>

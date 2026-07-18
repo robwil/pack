@@ -162,9 +162,9 @@ public class DatabaseMigrationTest {
         db.execSQL("INSERT INTO trip (name) VALUES ('Beach Trip')");
         db.execSQL("INSERT INTO trip_item (trip_id, item_id, status) VALUES (1, 1, 2)");
 
-        helper.onUpgrade(db, 1, 3);
+        helper.onUpgrade(db, 1, 4);
 
-        for (String table : new String[]{"list", "item", "listset", "listset_list", "trip", "trip_listset", "trip_item", "bag", "trip_bag"}) {
+        for (String table : new String[]{"list", "item", "listset", "listset_list", "trip", "trip_listset", "trip_item", "bag", "trip_bag", "trip_note", "trip_todo"}) {
             assertTrue(table + " should exist", tableExists(db, table));
         }
 
@@ -317,6 +317,51 @@ public class DatabaseMigrationTest {
         db.close();
     }
 
+    // --- V3 -> current: simulates a v3 database upgrading ---
+
+    @Test
+    public void migrateV3ToCurrent_createsNoteTables() {
+        SQLiteDatabase db = createV2Database();
+        db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        helper.onUpgrade(db, 3, 4);
+
+        assertTrue("trip_note table should exist", tableExists(db, "trip_note"));
+        assertTrue("trip_todo table should exist", tableExists(db, "trip_todo"));
+        assertTrue(columnExists(db, "trip_note", "trip_id"));
+        assertTrue(columnExists(db, "trip_note", "content"));
+        assertTrue(columnExists(db, "trip_todo", "trip_id"));
+        assertTrue(columnExists(db, "trip_todo", "text"));
+        assertTrue(columnExists(db, "trip_todo", "done"));
+        assertTrue(columnExists(db, "trip_todo", "sort_order"));
+        db.close();
+    }
+
+    @Test
+    public void migrateV3ToCurrent_notesCascadeOnTripDelete() {
+        SQLiteDatabase db = createV2Database();
+        db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        helper.onUpgrade(db, 3, 4);
+        db.execSQL("PRAGMA foreign_keys=ON");
+
+        db.execSQL("INSERT INTO trip (name) VALUES ('Test Trip')");
+        db.execSQL("INSERT INTO trip_note (trip_id, content) VALUES (1, 'Some notes')");
+        db.execSQL("INSERT INTO trip_todo (trip_id, text, done) VALUES (1, 'Buy sunscreen', 0)");
+
+        db.delete("trip", "_id=1", null);
+
+        Cursor cursor = db.rawQuery("SELECT COUNT(*) FROM trip_note", null);
+        assertTrue(cursor.moveToFirst());
+        assertEquals(0, cursor.getInt(0));
+        cursor.close();
+
+        cursor = db.rawQuery("SELECT COUNT(*) FROM trip_todo", null);
+        assertTrue(cursor.moveToFirst());
+        assertEquals(0, cursor.getInt(0));
+        cursor.close();
+
+        db.close();
+    }
+
     // --- Fresh install (onCreate) test ---
 
     @Test
@@ -324,7 +369,7 @@ public class DatabaseMigrationTest {
         SQLiteDatabase db = context.openOrCreateDatabase(TEST_DB, Context.MODE_PRIVATE, null);
         helper.onCreate(db);
 
-        for (String table : new String[]{"list", "item", "listset", "listset_list", "trip", "trip_listset", "trip_item", "bag", "trip_bag"}) {
+        for (String table : new String[]{"list", "item", "listset", "listset_list", "trip", "trip_listset", "trip_item", "bag", "trip_bag", "trip_note", "trip_todo"}) {
             assertTrue(table + " should exist", tableExists(db, table));
         }
 
@@ -336,6 +381,12 @@ public class DatabaseMigrationTest {
         assertTrue(columnExists(db, "bag", "color"));
         assertTrue(columnExists(db, "trip_bag", "trip_id"));
         assertTrue(columnExists(db, "trip_bag", "bag_id"));
+        assertTrue(columnExists(db, "trip_note", "trip_id"));
+        assertTrue(columnExists(db, "trip_note", "content"));
+        assertTrue(columnExists(db, "trip_todo", "trip_id"));
+        assertTrue(columnExists(db, "trip_todo", "text"));
+        assertTrue(columnExists(db, "trip_todo", "done"));
+        assertTrue(columnExists(db, "trip_todo", "sort_order"));
 
         db.close();
     }

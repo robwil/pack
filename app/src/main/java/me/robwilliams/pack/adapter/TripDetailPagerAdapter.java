@@ -1,6 +1,7 @@
 package me.robwilliams.pack.adapter;
 
 import android.os.Bundle;
+import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
@@ -12,13 +13,15 @@ import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.fragment.PackFragment;
 import me.robwilliams.pack.fragment.RepackFragment;
 import me.robwilliams.pack.fragment.ShouldPackFragment;
+import me.robwilliams.pack.fragment.TripNotesFragment;
 
 public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
 
-    private String[] pageTitles = {"Should Pack", "Pack", "Repack"};
+    private String[] pageTitles = {"Should Pack", "Pack", "Repack", "Notes"};
     private int tripId;
     private ArrayList<TripItem> tripItems;
     private ArrayList<Bag> tripBags;
+    private Fragment[] activeFragments = new Fragment[4];
 
     public TripDetailPagerAdapter(FragmentManager fm, int tripId, ArrayList<TripItem> tripItems, ArrayList<Bag> tripBags) {
         super(fm);
@@ -53,6 +56,12 @@ public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
                 RepackFragment repackFragment = new RepackFragment();
                 repackFragment.setArguments(bundle);
                 return repackFragment;
+            case 3:
+                TripNotesFragment notesFragment = new TripNotesFragment();
+                Bundle notesBundle = new Bundle();
+                notesBundle.putInt("tripId", tripId);
+                notesFragment.setArguments(notesBundle);
+                return notesFragment;
         }
 
         return null;
@@ -69,6 +78,26 @@ public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
             return "";
         }
         return pageTitles[position];
+    }
+
+    @Override
+    public Object instantiateItem(ViewGroup container, int position) {
+        Fragment f = (Fragment) super.instantiateItem(container, position);
+        activeFragments[position] = f;
+        return f;
+    }
+
+    @Override
+    public void destroyItem(ViewGroup container, int position, Object object) {
+        activeFragments[position] = null;
+        super.destroyItem(container, position, object);
+    }
+
+    public Fragment getActiveFragment(int position) {
+        if (position >= 0 && position < activeFragments.length) {
+            return activeFragments[position];
+        }
+        return null;
     }
 
     @Override

@@ -202,6 +202,90 @@ public class TripPackingFlowTest {
         scenario.close();
     }
 
+    @Test
+    public void reassignBagViLongPress() {
+        // Pre-populate: mark Shirt as should-pack, then packed into Backpack
+        ContentValues cv = new ContentValues();
+        cv.put("trip_id", tripId); cv.put("item_id", itemA1);
+        cv.put("status", 2); cv.put("bag_id", bag1);
+        context.getContentResolver().insert(TripItemContentProvider.CONTENT_URI, cv);
+
+        Uri tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + tripId);
+        android.content.Intent intent = new android.content.Intent(context, TripDetailActivity.class);
+        intent.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
+        ActivityScenario<TripDetailActivity> scenario = ActivityScenario.launch(intent);
+
+        // Navigate to Pack tab where the packed item lives
+        onView(withText("Pack")).perform(click());
+
+        // Long press Shirt to open quantity dialog
+        onView(allOf(withText(P + "Shirt"), isDisplayed())).perform(longClick());
+
+        // Tap "Reassign Bag…"
+        onView(withText("Reassign Bag…")).perform(click());
+
+        // Bag picker appears — select Suitcase
+        onView(withText(containsString(P + "Suitcase"))).perform(click());
+        onView(withText("OK")).perform(click());
+
+        // Verify the item is still displayed (bag updated in DB, UI refreshed)
+        onView(allOf(withText(P + "Shirt"), isDisplayed())).check(matches(isDisplayed()));
+
+        scenario.close();
+    }
+
+    @Test
+    public void clearRepackMovesItemsBackToPacked() {
+        // Pre-populate: mark Shirt and Pants as repacked, Toothbrush as packed
+        ContentValues cv = new ContentValues();
+        cv.put("trip_id", tripId); cv.put("item_id", itemA1);
+        cv.put("status", 3); cv.put("bag_id", bag1);
+        context.getContentResolver().insert(TripItemContentProvider.CONTENT_URI, cv);
+
+        cv.clear();
+        cv.put("trip_id", tripId); cv.put("item_id", itemA2);
+        cv.put("status", 3); cv.put("bag_id", bag1);
+        context.getContentResolver().insert(TripItemContentProvider.CONTENT_URI, cv);
+
+        cv.clear();
+        cv.put("trip_id", tripId); cv.put("item_id", itemB1);
+        cv.put("status", 2); cv.put("bag_id", bag2);
+        context.getContentResolver().insert(TripItemContentProvider.CONTENT_URI, cv);
+
+        Uri tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + tripId);
+        android.content.Intent intent = new android.content.Intent(context, TripDetailActivity.class);
+        intent.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
+        ActivityScenario<TripDetailActivity> scenario = ActivityScenario.launch(intent);
+
+        // Open overflow menu and tap Clear Repack
+        Espresso.openActionBarOverflowOrOptionsMenu(context);
+        onView(withText("Clear Repack")).perform(click());
+
+        // Confirm dialog — 2 repacked items
+        onView(withText(containsString("2 repacked"))).check(matches(isDisplayed()));
+        onView(withText(android.R.string.yes)).perform(click());
+
+        // Switch to Pack tab — all 3 items should be there (Shirt, Pants moved back + Toothbrush)
+        onView(withText("Pack")).perform(click());
+        onView(allOf(withText(P + "Shirt"), isDisplayed())).check(matches(isDisplayed()));
+        onView(allOf(withText(P + "Pants"), isDisplayed())).check(matches(isDisplayed()));
+        onView(allOf(withText(P + "Toothbrush"), isDisplayed())).check(matches(isDisplayed()));
+
+        // Switch to Repack tab — should have no repacked-only items
+        // (Shirt/Pants now appear as packed, so they show on Repack tab too,
+        // but verify via DB that status was actually changed)
+        scenario.onActivity(activity -> {
+            android.database.Cursor cursor = context.getContentResolver().query(
+                    TripItemContentProvider.CONTENT_URI, new String[]{"status"},
+                    "trip_id=" + tripId + " AND status=3", null, null);
+            int repackedCount = cursor != null ? cursor.getCount() : -1;
+            if (cursor != null) cursor.close();
+            assert repackedCount == 0 : "Expected 0 repacked items, got " + repackedCount;
+        });
+
+        scenario.close();
+    }
+
     private long insertId(Uri contentUri, ContentValues cv) {
         Uri uri = context.getContentResolver().insert(contentUri, cv);
         return Long.parseLong(uri.getLastPathSegment());

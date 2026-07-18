@@ -9,7 +9,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "pack";
 
     public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, 3);
+        super(context, DATABASE_NAME, null, 4);
     }
 
     @Override
@@ -89,6 +89,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "  FOREIGN KEY(bag_id) REFERENCES bag(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
                 ");");
 
+        db.execSQL("CREATE TABLE `trip_note` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `trip_id` INTEGER NOT NULL," +
+                "  `content` TEXT NOT NULL DEFAULT ''," +
+                "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                ");");
+
+        db.execSQL("CREATE TABLE `trip_todo` (" +
+                "  `_id` INTEGER PRIMARY KEY," +
+                "  `trip_id` INTEGER NOT NULL," +
+                "  `text` TEXT NOT NULL," +
+                "  `done` INTEGER NOT NULL DEFAULT 0," +
+                "  `sort_order` INTEGER NOT NULL DEFAULT 0," +
+                "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                ");");
+
     }
 
     @Override
@@ -112,6 +128,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE list ADD COLUMN default_bag_id INTEGER REFERENCES bag(_id) ON DELETE SET NULL");
+        }
+        if (oldVersion < 4) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `trip_note` (" +
+                    "  `_id` INTEGER PRIMARY KEY," +
+                    "  `trip_id` INTEGER NOT NULL," +
+                    "  `content` TEXT NOT NULL DEFAULT ''," +
+                    "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                    ");");
+            db.execSQL("CREATE TABLE IF NOT EXISTS `trip_todo` (" +
+                    "  `_id` INTEGER PRIMARY KEY," +
+                    "  `trip_id` INTEGER NOT NULL," +
+                    "  `text` TEXT NOT NULL," +
+                    "  `done` INTEGER NOT NULL DEFAULT 0," +
+                    "  `sort_order` INTEGER NOT NULL DEFAULT 0," +
+                    "  FOREIGN KEY(trip_id) REFERENCES trip(_id) ON UPDATE CASCADE ON DELETE CASCADE" +
+                    ");");
         }
     }
 

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import me.robwilliams.pack.HighlightHelper;
 import me.robwilliams.pack.R;
 import me.robwilliams.pack.adapter.PackingListExpandableAdapter;
 import me.robwilliams.pack.data.Bag;
@@ -131,7 +132,7 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
             TextView label = new TextView(getActivity());
             label.setText(bag.getName());
             label.setTextSize(12);
-            label.setTextColor(0xFF666666);
+            label.setTextColor(getResources().getColor(R.color.bag_legend_text));
 
             entry.addView(dot);
             entry.addView(label);
@@ -294,6 +295,35 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
                 }
 
                 groupedTripItems.get(listName).add(tripItem);
+            }
+        }
+    }
+
+    public void scrollToAndHighlightItem(final int itemId) {
+        if (expandableListView == null || listNames == null || groupedTripItems == null) return;
+
+        for (int g = 0; g < listNames.size(); g++) {
+            String groupName = listNames.get(g);
+            List<TripItem> items = groupedTripItems.get(groupName);
+            if (items == null) continue;
+            for (int c = 0; c < items.size(); c++) {
+                if (items.get(c).getItemId() == itemId) {
+                    expandableListView.expandGroup(g);
+                    final int flatPos = expandableListView.getFlatListPosition(
+                            ExpandableListView.getPackedPositionForChild(g, c));
+                    expandableListView.setSelectionFromTop(flatPos,
+                            expandableListView.getHeight() / 4);
+                    expandableListView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (expandableListView == null) return;
+                            int first = expandableListView.getFirstVisiblePosition();
+                            View child = expandableListView.getChildAt(flatPos - first);
+                            HighlightHelper.highlightView(child);
+                        }
+                    }, 300);
+                    return;
+                }
             }
         }
     }

@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
     <application
+        android:name=".PackApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -45,6 +46,14 @@
         <provider
             android:name=".data.TripBagContentProvider"
             android:authorities="me.robwilliams.pack.trip_bags.contentprovider" >
+        </provider>
+        <provider
+            android:name=".data.TripNoteContentProvider"
+            android:authorities="me.robwilliams.pack.trip_notes.contentprovider" >
+        </provider>
+        <provider
+            android:name=".data.TripTodoContentProvider"
+            android:authorities="me.robwilliams.pack.trip_todos.contentprovider" >
         </provider>
 
         <activity
