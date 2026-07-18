@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
@@ -201,7 +202,7 @@ public class TripDetailActivity extends AppCompatActivity {
                 }
                 nameView.setText(displayName);
                 nameView.setTextSize(16);
-                nameView.setTextColor(getResources().getColor(android.R.color.primary_text_light));
+                nameView.setTextColor(resolveThemeTextColor(android.R.attr.textColorPrimary));
                 layout.addView(nameView);
 
                 // Detail row: category + bag chip + bag name + status
@@ -213,14 +214,14 @@ public class TripDetailActivity extends AppCompatActivity {
                 TextView categoryView = new TextView(TripDetailActivity.this);
                 categoryView.setText(item.getListName());
                 categoryView.setTextSize(13);
-                categoryView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                categoryView.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                 detailRow.addView(categoryView);
 
                 if (item.getBagName() != null && !item.getBagName().isEmpty()) {
                     TextView separator = new TextView(TripDetailActivity.this);
                     separator.setText(" · ");
                     separator.setTextSize(13);
-                    separator.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    separator.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                     detailRow.addView(separator);
 
                     if (item.getBagColor() != null) {
@@ -244,7 +245,7 @@ public class TripDetailActivity extends AppCompatActivity {
                     TextView bagView = new TextView(TripDetailActivity.this);
                     bagView.setText(item.getBagName());
                     bagView.setTextSize(13);
-                    bagView.setTextColor(getResources().getColor(android.R.color.secondary_text_light));
+                    bagView.setTextColor(resolveThemeTextColor(android.R.attr.textColorSecondary));
                     detailRow.addView(bagView);
                 }
 
@@ -579,4 +580,10 @@ public class TripDetailActivity extends AppCompatActivity {
             .setNegativeButton(android.R.string.no, null).show();
     }
 
+    private int resolveThemeTextColor(int attr) {
+        TypedArray a = obtainStyledAttributes(new int[]{attr});
+        int color = a.getColor(0, Color.BLACK);
+        a.recycle();
+        return color;
+    }
 }

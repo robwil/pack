@@ -59,6 +59,11 @@
     <string name="label_default_bag">Default Bag</string>
     <string name="set_default_bag">Set Default Bag</string>
 
+    <!-- Theme toggle -->
+    <string name="theme_auto">Auto Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+
     <!-- Google Drive API Configuration is in build variant specific files:
          app/src/debug/res/values/google_oauth_config.xml
          app/src/release/res/values/google_oauth_config.xml -->

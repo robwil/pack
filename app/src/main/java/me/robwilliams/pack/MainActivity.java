@@ -13,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.View;
+import android.widget.TextView;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -43,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         driveService = new GoogleDriveService(this);
         setupActivityResultLaunchers();
+        updateThemeLabel();
     }
 
     private void setupActivityResultLaunchers() {
@@ -115,6 +117,17 @@ public class MainActivity extends AppCompatActivity {
     public void openBagsActivity(View view) {
         Intent intent = new Intent(this, BagManagementActivity.class);
         startActivity(intent);
+    }
+
+    public void toggleTheme(View view) {
+        int newMode = ThemeHelper.cycleTheme(this);
+        updateThemeLabel();
+    }
+
+    private void updateThemeLabel() {
+        TextView label = findViewById(R.id.theme_label);
+        int mode = ThemeHelper.getSavedThemeMode(this);
+        label.setText(ThemeHelper.getLabelResId(mode));
     }
 
     public void openCloudBackup(View view) {

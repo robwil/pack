@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme overrides -->
+    <color name="background">#121212</color>
+    <color name="tile_text">#E0E0E0</color>
+    <color name="tile_surface">#1E1E1E</color>
+    <color name="tile_border">#333333</color>
+    <color name="hint_text">#AAAAAA</color>
+    <color name="bag_legend_background">#FF1E1E1E</color>
+</resources>
