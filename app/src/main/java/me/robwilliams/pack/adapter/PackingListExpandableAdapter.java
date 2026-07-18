@@ -114,6 +114,7 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
             textView.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.0f));
             textView.setTextSize(16);
+            textView.setTextAppearance(context, android.R.style.TextAppearance_Medium);
             textView.setMaxLines(3);
             textView.setEllipsize(TextUtils.TruncateAt.END);
 
