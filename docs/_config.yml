@@ -1,0 +1,10 @@
+title: Pack
+description: A simple Android app for managing packing lists and trips
+baseurl: "/pack"
+url: "https://robwil.github.io"
+theme: minima
+
+header_pages:
+  - features.md
+  - workflow.md
+  - tips.md
