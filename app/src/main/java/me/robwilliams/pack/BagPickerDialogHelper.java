@@ -66,7 +66,7 @@ public class BagPickerDialogHelper {
         };
 
         new AlertDialog.Builder(context)
-                .setTitle("Pack into: " + itemName)
+                .setTitle(itemName + ": Select bag")
                 .setSingleChoiceItems(adapter, selectedIndex[0], (dialog, which) -> {
                     selectedIndex[0] = which;
                 })

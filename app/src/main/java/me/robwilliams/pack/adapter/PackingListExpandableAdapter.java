@@ -209,6 +209,34 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
             @Override
             public boolean onLongClick(View v) {
                 final int itemId = tripItem.getItemId();
+                boolean canReassignBag = !tripBags.isEmpty()
+                        && tripItem.getStatus() >= AbstractPackingFragment.STATUS_PACKED;
+                QuantityDialogHelper.OnReassignBagListener reassignListener = canReassignBag ?
+                        new QuantityDialogHelper.OnReassignBagListener() {
+                            @Override
+                            public void onReassignBag() {
+                                int preselectedBagId = BagSelectionLogic.resolvePreselectedBagId(
+                                        tripItem.getBagId(), tripItem.getBagHintId(), lastSelectedBagId);
+                                BagPickerDialogHelper.show(context, tripItem.getItemName(), tripBags, preselectedBagId,
+                                        new BagPickerDialogHelper.OnBagSelectedListener() {
+                                            @Override
+                                            public void onBagSelected(Bag bag) {
+                                                lastSelectedBagId = bag.getId();
+                                                tripItemMap.get(itemId).setBagId(bag.getId());
+                                                tripItemMap.get(itemId).setBagName(bag.getName());
+                                                tripItemMap.get(itemId).setBagColor(bag.getColor());
+                                                ContentValues values = new ContentValues();
+                                                values.put("bag_id", bag.getId());
+                                                context.getContentResolver().update(TripItemContentProvider.CONTENT_URI, values,
+                                                        "item_id=" + itemId + " AND trip_id=" + tripId, null);
+                                                notifyDataSetChanged();
+                                            }
+
+                                            @Override
+                                            public void onCancelled() {}
+                                        });
+                            }
+                        } : null;
                 QuantityDialogHelper.show(context, tripItem.getItemName(), tripItem.getQuantity(),
                         new QuantityDialogHelper.OnQuantitySetListener() {
                             @Override
@@ -234,7 +262,8 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
                             public void onQuickEdit() {
                                 launchItemEditor(itemId);
                             }
-                        });
+                        },
+                        reassignListener);
                 return true;
             }
         });

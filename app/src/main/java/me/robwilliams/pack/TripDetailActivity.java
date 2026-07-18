@@ -586,6 +586,40 @@ public class TripDetailActivity extends AppCompatActivity {
                 });
     }
 
+    public void clearRepackItems(MenuItem item) {
+        int repackCount = 0;
+        for (TripItem ti : tripItems) {
+            if (ti.getStatus() >= AbstractPackingFragment.STATUS_REPACKED) {
+                repackCount++;
+            }
+        }
+        if (repackCount == 0) {
+            Toast.makeText(this, "No repacked items to clear.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        final int count = repackCount;
+        new AlertDialog.Builder(this)
+            .setTitle("Clear Repack")
+            .setMessage("Move " + count + " repacked item(s) back to packed?")
+            .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                    ContentValues values = new ContentValues();
+                    values.put("status", AbstractPackingFragment.STATUS_PACKED);
+                    getContentResolver().update(TripItemContentProvider.CONTENT_URI, values,
+                            "trip_id=" + tripId + " AND status=" + AbstractPackingFragment.STATUS_REPACKED, null);
+                    for (TripItem ti : tripItems) {
+                        if (ti.getStatus() >= AbstractPackingFragment.STATUS_REPACKED) {
+                            ti.setStatus(AbstractPackingFragment.STATUS_PACKED);
+                        }
+                    }
+                    reloadTripData();
+                    Toast.makeText(TripDetailActivity.this,
+                            count + " item(s) moved back to packed.", Toast.LENGTH_SHORT).show();
+                }
+            })
+            .setNegativeButton(android.R.string.no, null).show();
+    }
+
     public void deleteTrip(MenuItem item) {
         final TripDetailActivity that = this;
         new AlertDialog.Builder(this)
