@@ -132,7 +132,7 @@ abstract public class AbstractPackingFragment extends Fragment implements Packin
             TextView label = new TextView(getActivity());
             label.setText(bag.getName());
             label.setTextSize(12);
-            label.setTextColor(0xFF666666);
+            label.setTextColor(getResources().getColor(R.color.bag_legend_text));
 
             entry.addView(dot);
             entry.addView(label);

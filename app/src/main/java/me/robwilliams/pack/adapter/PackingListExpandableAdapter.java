@@ -348,12 +348,11 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
         textView.setPadding(20, 15, 20, 15);
 
         if (isExpanded) {
-            textView.setBackgroundColor(0xFFE8F5E8);
-            textView.setTextColor(0xFF2E7D32);
+            textView.setBackgroundColor(context.getResources().getColor(R.color.group_expanded_bg));
         } else {
-            textView.setBackgroundColor(0xFFF5F5F5);
-            textView.setTextColor(0xFF2E7D32);
+            textView.setBackgroundColor(context.getResources().getColor(R.color.group_collapsed_bg));
         }
+        textView.setTextColor(context.getResources().getColor(R.color.group_text));
 
         return textView;
     }

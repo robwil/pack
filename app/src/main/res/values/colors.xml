@@ -9,5 +9,10 @@
     <color name="tile_surface">#FFFFFF</color>
     <color name="tile_border">#E0E0E0</color>
     <color name="hint_text">#888888</color>
-    <color name="bag_legend_background">#FFF5F5F5</color>
+
+    <color name="highlight">#FFF9C4</color>
+    <color name="group_expanded_bg">#E8F5E8</color>
+    <color name="group_collapsed_bg">#F5F5F5</color>
+    <color name="group_text">#2E7D32</color>
+    <color name="bag_legend_text">#666666</color>
 </resources>
