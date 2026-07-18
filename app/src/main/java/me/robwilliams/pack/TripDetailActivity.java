@@ -14,6 +14,7 @@ import android.view.Gravity;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import androidx.appcompat.widget.SearchView;
+import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
@@ -62,6 +63,7 @@ public class TripDetailActivity extends AppCompatActivity {
     private View tripContent;
     private ListView searchResultsView;
     private View emptySearchView;
+    private int pendingHighlightItemId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +89,10 @@ public class TripDetailActivity extends AppCompatActivity {
         }
     }
 
+    public void setPendingHighlightItemId(int itemId) {
+        this.pendingHighlightItemId = itemId;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -95,7 +101,23 @@ public class TripDetailActivity extends AppCompatActivity {
         }
         if (tripUri != null && viewPager != null) {
             reloadTripData();
+            dispatchPendingHighlight();
         }
+    }
+
+    private void dispatchPendingHighlight() {
+        if (pendingHighlightItemId < 0 || viewPager == null || mAdapter == null) return;
+        final int itemId = pendingHighlightItemId;
+        pendingHighlightItemId = -1;
+        viewPager.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Fragment f = mAdapter.getActiveFragment(viewPager.getCurrentItem());
+                if (f instanceof AbstractPackingFragment) {
+                    ((AbstractPackingFragment) f).scrollToAndHighlightItem(itemId);
+                }
+            }
+        }, 400);
     }
 
     @Override
@@ -266,8 +288,10 @@ public class TripDetailActivity extends AppCompatActivity {
                 if (position < matchedItems.size()) {
                     TripItem item = matchedItems.get(position);
                     int targetPage = resolvePageForStatus(item.getStatus());
+                    pendingHighlightItemId = item.getItemId();
                     searchMenuItem.collapseActionView();
                     viewPager.setCurrentItem(targetPage);
+                    dispatchPendingHighlight();
                 }
             }
         });

@@ -175,6 +175,7 @@ public class ListOverviewActivity extends AppCompatActivity
                     Intent i = new Intent(ListOverviewActivity.this, ListDetailActivity.class);
                     Uri listUri = Uri.parse(ListContentProvider.CONTENT_URI + "/" + listId);
                     i.putExtra(ListContentProvider.CONTENT_ITEM_TYPE, listUri);
+                    i.putExtra("highlight_item_id", id);
                     startActivity(i);
                 }
             });

@@ -28,6 +28,7 @@ import me.robwilliams.pack.BagSelectionLogic;
 import me.robwilliams.pack.ListItemDetailActivity;
 import me.robwilliams.pack.QuantityDialogHelper;
 import me.robwilliams.pack.R;
+import me.robwilliams.pack.TripDetailActivity;
 import me.robwilliams.pack.data.Bag;
 import me.robwilliams.pack.data.ItemContentProvider;
 import me.robwilliams.pack.data.ListContentProvider;
@@ -296,6 +297,9 @@ public class PackingListExpandableAdapter extends BaseExpandableListAdapter {
         if (cursor != null && cursor.moveToFirst()) {
             int listId = cursor.getInt(cursor.getColumnIndexOrThrow("list_id"));
             cursor.close();
+            if (context instanceof TripDetailActivity) {
+                ((TripDetailActivity) context).setPendingHighlightItemId(itemId);
+            }
             Uri itemUri = Uri.parse(ItemContentProvider.CONTENT_URI + "/" + itemId);
             Intent intent = new Intent(context, ListItemDetailActivity.class);
             intent.putExtra(ItemContentProvider.CONTENT_ITEM_TYPE, itemUri);

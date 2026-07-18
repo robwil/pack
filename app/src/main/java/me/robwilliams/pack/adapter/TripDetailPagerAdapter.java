@@ -1,6 +1,7 @@
 package me.robwilliams.pack.adapter;
 
 import android.os.Bundle;
+import android.view.ViewGroup;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
@@ -19,6 +20,7 @@ public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
     private int tripId;
     private ArrayList<TripItem> tripItems;
     private ArrayList<Bag> tripBags;
+    private Fragment[] activeFragments = new Fragment[3];
 
     public TripDetailPagerAdapter(FragmentManager fm, int tripId, ArrayList<TripItem> tripItems, ArrayList<Bag> tripBags) {
         super(fm);
@@ -69,6 +71,26 @@ public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
             return "";
         }
         return pageTitles[position];
+    }
+
+    @Override
+    public Object instantiateItem(ViewGroup container, int position) {
+        Fragment f = (Fragment) super.instantiateItem(container, position);
+        activeFragments[position] = f;
+        return f;
+    }
+
+    @Override
+    public void destroyItem(ViewGroup container, int position, Object object) {
+        activeFragments[position] = null;
+        super.destroyItem(container, position, object);
+    }
+
+    public Fragment getActiveFragment(int position) {
+        if (position >= 0 && position < activeFragments.length) {
+            return activeFragments[position];
+        }
+        return null;
     }
 
     @Override

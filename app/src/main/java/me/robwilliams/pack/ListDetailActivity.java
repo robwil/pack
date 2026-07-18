@@ -53,6 +53,7 @@ public class ListDetailActivity extends AppCompatActivity
     private int listId;
 
     private SimpleCursorAdapter adapter;
+    private long pendingHighlightItemId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +76,7 @@ public class ListDetailActivity extends AppCompatActivity
         if (extras != null) {
             listUri = extras
                     .getParcelable(ListContentProvider.CONTENT_ITEM_TYPE);
+            pendingHighlightItemId = extras.getLong("highlight_item_id", -1);
 
             fillData(listUri);
         }
@@ -194,6 +196,35 @@ public class ListDetailActivity extends AppCompatActivity
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         adapter.swapCursor(data);
+        if (pendingHighlightItemId >= 0 && data != null) {
+            final long targetId = pendingHighlightItemId;
+            pendingHighlightItemId = -1;
+            int position = -1;
+            for (int i = 0; i < data.getCount(); i++) {
+                data.moveToPosition(i);
+                if (data.getLong(data.getColumnIndexOrThrow("_id")) == targetId) {
+                    position = i;
+                    break;
+                }
+            }
+            if (position >= 0) {
+                final int pos = position;
+                mListItemsView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mListItemsView.setSelectionFromTop(pos, mListItemsView.getHeight() / 4);
+                        mListItemsView.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                int first = mListItemsView.getFirstVisiblePosition();
+                                View child = mListItemsView.getChildAt(pos - first);
+                                HighlightHelper.highlightView(child);
+                            }
+                        }, 300);
+                    }
+                }, 200);
+            }
+        }
     }
 
     @Override
