@@ -13,14 +13,15 @@ import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.fragment.PackFragment;
 import me.robwilliams.pack.fragment.RepackFragment;
 import me.robwilliams.pack.fragment.ShouldPackFragment;
+import me.robwilliams.pack.fragment.TripNotesFragment;
 
 public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
 
-    private String[] pageTitles = {"Should Pack", "Pack", "Repack"};
+    private String[] pageTitles = {"Should Pack", "Pack", "Repack", "Notes"};
     private int tripId;
     private ArrayList<TripItem> tripItems;
     private ArrayList<Bag> tripBags;
-    private Fragment[] activeFragments = new Fragment[3];
+    private Fragment[] activeFragments = new Fragment[4];
 
     public TripDetailPagerAdapter(FragmentManager fm, int tripId, ArrayList<TripItem> tripItems, ArrayList<Bag> tripBags) {
         super(fm);
@@ -55,6 +56,12 @@ public class TripDetailPagerAdapter extends FragmentStatePagerAdapter {
                 RepackFragment repackFragment = new RepackFragment();
                 repackFragment.setArguments(bundle);
                 return repackFragment;
+            case 3:
+                TripNotesFragment notesFragment = new TripNotesFragment();
+                Bundle notesBundle = new Bundle();
+                notesBundle.putInt("tripId", tripId);
+                notesFragment.setArguments(notesBundle);
+                return notesFragment;
         }
 
         return null;

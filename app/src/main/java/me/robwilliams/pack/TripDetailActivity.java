@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
 import android.widget.LinearLayout;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
@@ -48,7 +49,9 @@ import me.robwilliams.pack.data.TripBagContentProvider;
 import me.robwilliams.pack.data.TripContentProvider;
 import me.robwilliams.pack.data.TripItem;
 import me.robwilliams.pack.data.TripItemContentProvider;
+import me.robwilliams.pack.data.TripNoteContentProvider;
 import me.robwilliams.pack.data.TripSetContentProvider;
+import me.robwilliams.pack.data.TripTodoContentProvider;
 import me.robwilliams.pack.fragment.AbstractPackingFragment;
 
 public class TripDetailActivity extends AppCompatActivity {
@@ -497,71 +500,124 @@ public class TripDetailActivity extends AppCompatActivity {
     }
 
     public void showCopyTripDialog(MenuItem item) {
-        // Construct dialog to Name the Trip
-        final EditText txtTripName = new EditText(this);
-        int dpPadding = 16;  // 16 dps
         final float scale = getResources().getDisplayMetrics().density;
-        int pxPadding = (int) (dpPadding * scale + 0.5f);
-        txtTripName.setPadding(pxPadding, pxPadding, pxPadding, pxPadding);
+        int dp16 = (int) (16 * scale + 0.5f);
+        int dp8 = (int) (8 * scale + 0.5f);
+
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setPadding(dp16, dp16, dp16, dp8);
+
+        final EditText txtTripName = new EditText(this);
+        txtTripName.setHint("Trip name");
+        layout.addView(txtTripName);
+
+        final CheckBox cbBags = new CheckBox(this);
+        cbBags.setText("Copy bag assignments");
+        cbBags.setChecked(true);
+        LinearLayout.LayoutParams cbParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        cbParams.setMargins(0, dp8, 0, 0);
+        cbBags.setLayoutParams(cbParams);
+        layout.addView(cbBags);
+
+        final CheckBox cbNotes = new CheckBox(this);
+        cbNotes.setText("Copy notes & to-dos");
+        cbNotes.setChecked(false);
+        cbNotes.setLayoutParams(cbParams);
+        layout.addView(cbNotes);
 
         final TripDetailActivity that = this;
         new AlertDialog.Builder(this)
             .setTitle("Copy Trip")
-            .setMessage("Select a name for the new trip.")
-            .setView(txtTripName)
+            .setView(layout)
             .setPositiveButton("Copy", new DialogInterface.OnClickListener() {
                 public void onClick(DialogInterface dialog, int whichButton) {
                     Toast.makeText(that, "Copying Trip...", Toast.LENGTH_SHORT).show();
-                    // First, create the Trip with the given name.
                     String tripName = txtTripName.getText().toString();
                     ContentValues values = new ContentValues();
                     values.put("name", tripName);
-                    Uri tripUri = getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
-                    long tripId = Long.parseLong(tripUri.getLastPathSegment());
-                    // Iterate through existing Trip's items to figure out Sets and Items we want
+                    Uri newTripUri = getContentResolver().insert(TripContentProvider.CONTENT_URI, values);
+                    long newTripId = Long.parseLong(newTripUri.getLastPathSegment());
+
                     Set<Integer> setIds = new HashSet<>();
                     for (TripItem tripItem : tripItems) {
                         setIds.add(tripItem.getListsetId());
                     }
-                    // Next setup the join table relationship between new Trip and original Trip's sets
                     for (int listsetId : setIds) {
                         values = new ContentValues();
-                        values.put("trip_id", tripId);
+                        values.put("trip_id", newTripId);
                         values.put("listset_id", listsetId);
                         getContentResolver().insert(TripSetContentProvider.CONTENT_URI, values);
                     }
-                    // Finally setup the Trip Item join table with a status of SHOULD_PACK
+
+                    boolean copyBags = cbBags.isChecked();
                     for (TripItem ti : tripItems) {
                         if (ti.getStatus() >= AbstractPackingFragment.STATUS_SHOULD_PACK) {
                             values = new ContentValues();
-                            values.put("trip_id", tripId);
+                            values.put("trip_id", newTripId);
                             values.put("item_id", ti.getItemId());
                             values.put("status", AbstractPackingFragment.STATUS_SHOULD_PACK);
                             values.put("quantity", ti.getQuantity());
+                            if (copyBags && ti.getBagId() > 0) {
+                                values.put("bag_id", ti.getBagId());
+                            }
                             getContentResolver().insert(TripItemContentProvider.CONTENT_URI, values);
                         }
                     }
-                    // Copy trip bags
-                    if (tripBags != null) {
+
+                    if (copyBags && tripBags != null) {
                         for (Bag bag : tripBags) {
                             values = new ContentValues();
-                            values.put("trip_id", tripId);
+                            values.put("trip_id", newTripId);
                             values.put("bag_id", bag.getId());
                             getContentResolver().insert(TripBagContentProvider.CONTENT_URI, values);
                         }
                     }
-                    // Then transition to the new Trip
+
+                    if (cbNotes.isChecked()) {
+                        copyTripNotes(newTripId);
+                    }
+
                     Intent i = new Intent(that, TripDetailActivity.class);
-                    tripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + tripId);
-                    i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, tripUri);
+                    newTripUri = Uri.parse(TripContentProvider.CONTENT_URI + "/" + newTripId);
+                    i.putExtra(TripContentProvider.CONTENT_ITEM_TYPE, newTripUri);
                     startActivity(i);
                 }
             })
-            .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialog, int whichButton) {
-                }
-            })
+            .setNegativeButton("Cancel", null)
             .show();
+    }
+
+    private void copyTripNotes(long newTripId) {
+        Cursor cursor = getContentResolver().query(
+                TripNoteContentProvider.CONTENT_URI,
+                new String[]{"content"}, "trip_id=" + tripId, null, null);
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("trip_id", newTripId);
+                values.put("content", cursor.getString(0));
+                getContentResolver().insert(TripNoteContentProvider.CONTENT_URI, values);
+            }
+            cursor.close();
+        }
+
+        cursor = getContentResolver().query(
+                TripTodoContentProvider.CONTENT_URI,
+                new String[]{"text", "done", "sort_order"},
+                "trip_id=" + tripId, null, "sort_order ASC");
+        if (cursor != null) {
+            while (cursor.moveToNext()) {
+                ContentValues values = new ContentValues();
+                values.put("trip_id", newTripId);
+                values.put("text", cursor.getString(0));
+                values.put("done", cursor.getInt(1));
+                values.put("sort_order", cursor.getInt(2));
+                getContentResolver().insert(TripTodoContentProvider.CONTENT_URI, values);
+            }
+            cursor.close();
+        }
     }
 
     public void showTripBagSelection(MenuItem item) {
