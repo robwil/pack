@@ -1,6 +1,8 @@
 package me.robwilliams.pack;
 
 import org.junit.Test;
+
+import me.robwilliams.pack.fragment.AbstractPackingFragment;
 import static org.junit.Assert.*;
 
 public class SearchLogicTest {
@@ -41,22 +43,33 @@ public class SearchLogicTest {
     }
 
     @Test
-    public void page_notSelectedGoesToShouldPack() {
-        assertEquals(0, SearchLogic.resolvePageForStatus(0));
+    public void page_staysOnCurrentTabWhenVisible() {
+        assertEquals(1, SearchLogic.resolvePageForStatus(
+                AbstractPackingFragment.STATUS_REPACKED, 1));
     }
 
     @Test
-    public void page_shouldPackGoesToPack() {
-        assertEquals(1, SearchLogic.resolvePageForStatus(1));
+    public void page_shouldPackTabShowsEverything() {
+        assertEquals(0, SearchLogic.resolvePageForStatus(
+                AbstractPackingFragment.STATUS_PACKED, 0));
     }
 
     @Test
-    public void page_packedGoesToRepack() {
-        assertEquals(2, SearchLogic.resolvePageForStatus(2));
+    public void page_fallsBackOneTab() {
+        assertEquals(1, SearchLogic.resolvePageForStatus(
+                AbstractPackingFragment.STATUS_SHOULD_PACK, 2));
     }
 
     @Test
-    public void page_repackedStaysOnRepack() {
-        assertEquals(2, SearchLogic.resolvePageForStatus(3));
+    public void page_fallsBackToShouldPack() {
+        assertEquals(0, SearchLogic.resolvePageForStatus(0, 2));
+    }
+
+    @Test
+    public void page_notesTabStartsFromRepack() {
+        assertEquals(2, SearchLogic.resolvePageForStatus(
+                AbstractPackingFragment.STATUS_PACKED, 3));
+        assertEquals(1, SearchLogic.resolvePageForStatus(
+                AbstractPackingFragment.STATUS_SHOULD_PACK, 3));
     }
 }
