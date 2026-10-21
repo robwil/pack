@@ -5,6 +5,7 @@ import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
+import android.database.MatrixCursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
@@ -150,14 +151,26 @@ public class ListOverviewActivity extends AppCompatActivity
             searchCursor.close();
         }
 
-        String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
         SQLiteDatabase db = dbHelper.getReadableDatabase();
-        searchCursor = db.rawQuery(
+        Cursor allItems = db.rawQuery(
                 "SELECT I._id AS _id, I.name AS item_name, L.name AS list_name, L._id AS list_id" +
                 " FROM item I INNER JOIN list L ON I.list_id = L._id" +
-                " WHERE I.name LIKE ? ESCAPE '\\'" +
                 " ORDER BY L.weight DESC, L.name ASC, I.weight DESC, I.name ASC",
-                new String[] { pattern });
+                null);
+        // Filter in Java so matching can ignore punctuation/spacing (see SearchLogic)
+        MatrixCursor filtered = new MatrixCursor(allItems.getColumnNames());
+        try {
+            while (allItems.moveToNext()) {
+                String itemName = allItems.getString(1);
+                if (SearchLogic.matches(query, itemName)) {
+                    filtered.addRow(new Object[] { allItems.getLong(0), itemName,
+                            allItems.getString(2), allItems.getLong(3) });
+                }
+            }
+        } finally {
+            allItems.close();
+        }
+        searchCursor = filtered;
 
         if (searchAdapter == null) {
             searchAdapter = new SimpleCursorAdapter(this,

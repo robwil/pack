@@ -37,7 +37,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -166,13 +165,12 @@ public class TripDetailActivity extends AppCompatActivity {
     }
 
     private void performTripSearch(String query) {
-        String lowerQuery = query.toLowerCase(Locale.getDefault());
         final List<TripItem> matchedItems = new ArrayList<>();
         final Map<TripItem, Integer> originalIndex = new HashMap<>();
 
         for (int i = 0; i < tripItems.size(); i++) {
             TripItem item = tripItems.get(i);
-            if (item.getItemName().toLowerCase(Locale.getDefault()).contains(lowerQuery)) {
+            if (SearchLogic.matches(query, item.getItemName())) {
                 matchedItems.add(item);
                 originalIndex.put(item, i);
             }
@@ -291,7 +289,7 @@ public class TripDetailActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position < matchedItems.size()) {
                     TripItem item = matchedItems.get(position);
-                    int targetPage = resolvePageForStatus(item.getStatus());
+                    int targetPage = SearchLogic.resolvePageForStatus(item.getStatus());
                     pendingHighlightItemId = item.getItemId();
                     searchMenuItem.collapseActionView();
                     viewPager.setCurrentItem(targetPage);
@@ -315,12 +313,6 @@ public class TripDetailActivity extends AppCompatActivity {
         if (status >= AbstractPackingFragment.STATUS_PACKED) return 0xFF1565C0;
         if (status >= AbstractPackingFragment.STATUS_SHOULD_PACK) return 0xFFE65100;
         return Color.GRAY;
-    }
-
-    private int resolvePageForStatus(int status) {
-        if (status >= AbstractPackingFragment.STATUS_REPACKED) return 2;
-        if (status >= AbstractPackingFragment.STATUS_PACKED) return 1;
-        return 0;
     }
 
     private void showSearchMode(boolean empty) {
