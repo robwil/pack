@@ -289,7 +289,8 @@ public class TripDetailActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position < matchedItems.size()) {
                     TripItem item = matchedItems.get(position);
-                    int targetPage = SearchLogic.resolvePageForStatus(item.getStatus());
+                    int targetPage = SearchLogic.resolvePageForStatus(
+                            item.getStatus(), viewPager.getCurrentItem());
                     pendingHighlightItemId = item.getItemId();
                     searchMenuItem.collapseActionView();
                     viewPager.setCurrentItem(targetPage);

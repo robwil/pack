@@ -26,13 +26,19 @@ public class SearchLogic {
         return s.toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]", "");
     }
 
+    private static final int LAST_PACKING_PAGE = 2;
+
     /**
-     * Picks the latest tab on which the item still appears unchecked (Should Pack → Pack →
-     * Repack). Fully repacked items go to the Repack tab.
+     * Picks the tab to show a search result on: the current tab if the item appears there,
+     * otherwise the nearest previous tab (Repack → Pack → Should Pack). Tab N shows items
+     * with status >= N, so Should Pack always contains it. From a non-packing tab (Notes),
+     * the search starts at Repack.
      */
-    public static int resolvePageForStatus(int status) {
-        if (status >= AbstractPackingFragment.STATUS_PACKED) return 2;
-        if (status >= AbstractPackingFragment.STATUS_SHOULD_PACK) return 1;
+    public static int resolvePageForStatus(int status, int currentPage) {
+        int start = Math.min(currentPage, LAST_PACKING_PAGE);
+        for (int page = start; page > 0; page--) {
+            if (status >= page) return page;
+        }
         return 0;
     }
 }
